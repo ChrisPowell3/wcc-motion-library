@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent} from 'react';
+import {useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent, type PointerEvent} from 'react';
 import {animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type MotionValue} from 'motion/react';
 import {durations, ease, springs} from '../../tokens';
 import {clamp, landingIndex, resist, safeNumber} from './physics';
@@ -15,8 +15,27 @@ export interface SwipeCarouselItem {
   text: string;
   cta?: {label: string; href: string};
 }
-export interface SwipeCarouselProps {
-  items: readonly SwipeCarouselItem[];
+export interface SwipeCarouselCardState {
+  index: number;
+  count: number;
+  /** Selected center card (the destination while settling). */
+  active: boolean;
+  /** True only for the active card after the fan or settling spring completes. */
+  ready: boolean;
+  /** Gate custom image sources with this flag to preserve deferred loading. */
+  loadImage: boolean;
+}
+
+/** Decoration only; movement, dimensions and stacking remain owned by the frame. */
+export type SwipeCarouselCardStyle = Pick<CSSProperties, 'borderRadius' | 'background' | 'boxShadow'>;
+type CardRenderer<T> = (item: T, state: SwipeCarouselCardState) => ReactNode;
+
+interface SwipeCarouselOptions<T extends {id: string}> {
+  items: readonly T[];
+  /** CSS aspect ratio, or "auto" for content-driven custom card height. */
+  cardAspect?: string;
+  /** Optional radius, background and shadow overrides; omitted values keep the house look. */
+  cardStyle?: SwipeCarouselCardStyle;
   /** Accessible name for the carousel region. Defaults to "Image carousel". */
   label?: string;
   /** Zero-based; defaults to Math.floor(items.length / 2), clamped to available cards. */
@@ -32,10 +51,15 @@ export interface SwipeCarouselProps {
   onChange?: (index: number) => void;
 }
 
+/** Custom item shapes require a renderer; existing image items use the default card. */
+export type SwipeCarouselProps<T extends {id: string} = SwipeCarouselItem> = SwipeCarouselOptions<T> &
+  ([T] extends [SwipeCarouselItem] ? {renderCard?: CardRenderer<T>} : {renderCard: CardRenderer<T>});
+
 type Gesture = {id: number; startX: number; startY: number; origin: number; lastX: number; lastTime: number; velocity: number; axis: 'pending' | 'x' | 'y'};
 
-function Card({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, measure}: {
-  item: SwipeCarouselItem; index: number; count: number; active: boolean; ready: boolean; eager: boolean;
+function Card<T extends {id: string}>({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, cardAspect, cardStyle, renderCard, measure}: {
+  item: T; index: number; count: number; active: boolean; ready: boolean; eager: boolean;
+  cardAspect: string; cardStyle?: SwipeCarouselCardStyle; renderCard?: CardRenderer<T>;
   position: MotionValue<number>; spread: MotionValue<number>; step: MotionValue<number>;
   sideScale: number; cardWidth: string; reduced: boolean; imagesReady: boolean; keyboardFocus: boolean; measure?: React.Ref<HTMLDivElement>;
 }) {
@@ -47,25 +71,35 @@ function Card({item, index, count, active, ready, eager, position, spread, step,
   // Use the live distance so dragging, wheels, and spring travel share the same order.
   const zIndex = useTransform(() => count + 1 - Math.round(distance.get()));
   const [focused, setFocused] = useState(false);
+  // The public props require renderCard for shapes without the built-in fields.
+  const defaultItem = item as T & SwipeCarouselItem;
   return <motion.div ref={measure} role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${count}`}
-    style={{...styles.card, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity, zIndex}}>
-    <img src={eager || imagesReady ? item.image : undefined} alt={item.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} style={styles.image}/>
+    style={{...styles.card,
+      borderRadius: cardStyle?.borderRadius ?? styles.card.borderRadius,
+      background: cardStyle?.background ?? styles.card.background,
+      boxShadow: cardStyle?.boxShadow ?? styles.card.boxShadow,
+      aspectRatio: cardAspect, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity, zIndex}}>
+    {renderCard ? <div inert={!active || !ready} style={{height: cardAspect === 'auto' ? undefined : '100%'}}>
+      {renderCard(item, {index, count, active, ready: active && ready, loadImage: eager || imagesReady})}
+    </div> : <>
+    <img src={eager || imagesReady ? defaultItem.image : undefined} alt={defaultItem.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} style={styles.image}/>
     <motion.div aria-hidden={!active || !ready} inert={!active || !ready} initial={false}
       animate={{opacity: active && ready ? 1 : 0}}
       transition={{duration: reduced || !active || !ready ? 0 : durations.base, ease}}
       style={{...styles.content, pointerEvents: active && ready ? 'auto' : 'none'}}>
-      <h3 style={styles.title}>{item.title}</h3>
-      <p style={styles.text}>{item.text}</p>
-      {item.cta && <a href={item.cta.href} tabIndex={active && ready ? 0 : -1} draggable={false}
+      <h3 style={styles.title}>{defaultItem.title}</h3>
+      <p style={styles.text}>{defaultItem.text}</p>
+      {defaultItem.cta && <a href={defaultItem.cta.href} tabIndex={active && ready ? 0 : -1} draggable={false}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        style={{...styles.cta, ...(focused && keyboardFocus ? focusRing : {outline: 'none'})}}>{item.cta.label}</a>}
+        style={{...styles.cta, ...(focused && keyboardFocus ? focusRing : {outline: 'none'})}}>{defaultItem.cta.label}</a>}
     </motion.div>
+    </>}
   </motion.div>;
 }
 
 /** A centered, finite carousel with direct manipulation and token-based motion. */
-export function SwipeCarousel({items, label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
-  sideScale = .8, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps) {
+export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items, renderCard, cardAspect = '3 / 4', cardStyle, label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
+  sideScale = .8, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps<T>) {
   const count = items.length;
   const initial = Math.round(safeNumber(startIndex ?? Math.floor(count / 2), Math.floor(count / 2), 0, Math.max(0, count - 1)));
   const reduced = !!useReducedMotion();
@@ -255,8 +289,8 @@ export function SwipeCarousel({items, label = 'Image carousel', startIndex, card
     else if (event.key === 'End') next = count - 1;
     else return;
     event.preventDefault();
-    // A departing CTA becomes inert; keep keyboard focus on the carousel.
-    if ((event.target as HTMLElement).closest('a')) region.current?.focus({preventScroll: true});
+    // Departing card content becomes inert; keep keyboard focus on the carousel.
+    if ((event.target as HTMLElement).closest('[aria-roledescription="slide"]')) region.current?.focus({preventScroll: true});
     goTo(next);
   }
 
@@ -265,10 +299,12 @@ export function SwipeCarousel({items, label = 'Image carousel', startIndex, card
     onBlur={event => { if (event.target === event.currentTarget) setFocused(null); }}
     style={{...styles.region, ...(focused === 'region' && keyboardFocus ? focusRing : {outline: 'none'})}}>
     <div ref={viewport} aria-label="Drag or swipe cards" style={{...styles.viewport, cursor: count > 1 ? 'grab' : 'default'}}
+      onDragStartCapture={event => { if (renderCard) event.preventDefault(); }}
       onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event => pointerEnd(event)}
       onPointerCancel={event => pointerEnd(event, true)} onLostPointerCapture={event => pointerEnd(event, true)}
       onClickCapture={event => { if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
       {items.map((item, i) => <Card key={item.id} item={item} index={i} count={count} active={i === activeIndex}
+        cardAspect={cardAspect} cardStyle={cardStyle} renderCard={renderCard}
         ready={ready} eager={Math.abs(i - activeIndex) <= 1} position={position} spread={spread} step={step}
         sideScale={neighborScale} cardWidth={cardWidth} reduced={reduced} imagesReady={imagesReady} keyboardFocus={keyboardFocus} measure={i === 0 ? measure : undefined}/>)}
     </div>
@@ -281,6 +317,6 @@ export function SwipeCarousel({items, label = 'Image carousel', startIndex, card
           transition={reduced ? {duration: 0} : {duration: durations.base, ease}} style={styles.dotMark}/>
       </button>)}
     </div>}
-    <span aria-live="polite" aria-atomic="true" style={styles.srOnly}>{count ? `Card ${activeIndex + 1} of ${count}: ${items[activeIndex].title}` : 'No cards'}</span>
+    <span aria-live="polite" aria-atomic="true" style={styles.srOnly}>{count ? `Card ${activeIndex + 1} of ${count}${'title' in items[activeIndex] && typeof items[activeIndex].title === 'string' ? `: ${items[activeIndex].title}` : ''}` : 'No cards'}</span>
   </section>;
 }

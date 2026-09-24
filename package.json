@@ -1,6 +1,6 @@
 {
   "name": "@wcc/motion-library",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "WCC Motion Library: shared, hand-tuned, tested motion pieces for every CP website.",
   "private": true,
   "type": "module",

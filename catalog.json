@@ -1,21 +1,21 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "pieces": [
     {
       "id": "swipe-carousel",
       "name": "Swipe Carousel",
       "export": "SwipeCarousel",
-      "summary": "Swipe through a row of image cards that gently settle with your chosen card in the center.",
-      "status": "ready",
+      "summary": "Swipe through your own card designs or image cards that gently settle in the center.",
+      "status": "beta",
       "settings": {
         "items": {
-          "type": "Array<{id: string, image: string, alt: string, title: string, text: string, cta?: {label: string, href: string}}>",
+          "type": "readonly T[] where T extends {id: string}",
           "default": [],
           "required": true,
           "min": 0,
           "max": null,
-          "description": "Required array; stable unique IDs and image alt text. Empty lists are supported. No fixed upper limit. Keep titles and text concise enough to fit the card."
+          "description": "Required array with unique stable IDs; empty lists supported. Without renderCard, use the existing SwipeCarouselItem image/alt/title/text/optional cta shape. Other item shapes require renderCard."
         },
         "startIndex": {
           "type": "number",
@@ -30,7 +30,7 @@
           "options": [
             "Any valid CSS width, e.g. 280px, 70vw, or clamp(220px, 70vw, 360px)"
           ],
-          "description": "Capped to carousel width minus 32px. Cards use a 3:4 aspect ratio."
+          "description": "Capped to carousel width minus 32px. The cardAspect prop controls the aspect ratio."
         },
         "gap": {
           "type": "number",
@@ -79,6 +79,36 @@
             "Any non-empty accessible name"
           ],
           "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
+        },
+        "renderCard": {
+          "type": "(item: T, state: SwipeCarouselCardState) => ReactNode",
+          "default": null,
+          "options": [
+            "undefined (built-in image card)",
+            "function"
+          ],
+          "description": "Replaces all content inside the motion frame. State: index (zero-based), count, active (selected center/destination), ready (active and settled, when built-in text begins fading), loadImage (center plus immediate neighbors first, all cards after fan-out or interaction). Gate image src with loadImage. Custom content stays inert off-center and while settling. Required for item shapes other than SwipeCarouselItem."
+        },
+        "cardAspect": {
+          "type": "string",
+          "default": "3 / 4",
+          "options": [
+            "Any positive CSS aspect ratio, e.g. 1 / 1 or 4 / 3",
+            "auto"
+          ],
+          "description": "Frame aspect ratio. Use auto with in-flow custom content to size the card by its contents; height is not animated."
+        },
+        "cardStyle": {
+          "type": "{borderRadius?: CSSProperties[\"borderRadius\"], background?: CSSProperties[\"background\"], boxShadow?: CSSProperties[\"boxShadow\"]}",
+          "default": {
+            "borderRadius": 24,
+            "background": "#23373d",
+            "boxShadow": "0 12px 24px -16px rgba(0,0,0,.55)"
+          },
+          "options": [
+            "Object containing any subset of borderRadius, background and boxShadow"
+          ],
+          "description": "Static frame decoration; omitted fields retain the built-in look. Width, aspect, transforms, opacity and stacking remain controlled by the carousel."
         }
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
