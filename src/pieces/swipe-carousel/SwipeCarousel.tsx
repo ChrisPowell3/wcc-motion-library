@@ -17,6 +17,8 @@ export interface SwipeCarouselItem {
 }
 export interface SwipeCarouselProps {
   items: readonly SwipeCarouselItem[];
+  /** Accessible name for the carousel region. Defaults to "Image carousel". */
+  label?: string;
   /** Zero-based; defaults to Math.floor(items.length / 2), clamped to available cards. */
   startIndex?: number;
   /** CSS width, capped to the available viewport. */
@@ -32,16 +34,18 @@ export interface SwipeCarouselProps {
 
 type Gesture = {id: number; startX: number; startY: number; origin: number; lastX: number; lastTime: number; velocity: number; axis: 'pending' | 'x' | 'y'};
 
-function Card({item, index, count, active, selectedIndex, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, measure}: {
-  item: SwipeCarouselItem; index: number; count: number; active: boolean; selectedIndex: number; ready: boolean; eager: boolean;
+function Card({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, measure}: {
+  item: SwipeCarouselItem; index: number; count: number; active: boolean; ready: boolean; eager: boolean;
   position: MotionValue<number>; spread: MotionValue<number>; step: MotionValue<number>;
-  sideScale: number; cardWidth: string; reduced: boolean; imagesReady: boolean; measure?: React.Ref<HTMLDivElement>;
+  sideScale: number; cardWidth: string; reduced: boolean; imagesReady: boolean; keyboardFocus: boolean; measure?: React.Ref<HTMLDivElement>;
 }) {
   const distance = useTransform(() => Math.abs(index + position.get()));
   const x = useTransform(() => (index + position.get()) * step.get() * spread.get());
   const scale = useTransform(() => 1 - Math.min(distance.get(), 1) * (1 - sideScale));
   const opacity = useTransform(distance, [0, 1, 2, 3], [1, .9, .6, .3]);
-  const zIndex = count + 1 - Math.abs(index - selectedIndex);
+  // Discrete stacking changes at half-card crossings, without tweening z-index.
+  // Use the live distance so dragging, wheels, and spring travel share the same order.
+  const zIndex = useTransform(() => count + 1 - Math.round(distance.get()));
   const [focused, setFocused] = useState(false);
   return <motion.div ref={measure} role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${count}`}
     style={{...styles.card, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity, zIndex}}>
@@ -54,13 +58,13 @@ function Card({item, index, count, active, selectedIndex, ready, eager, position
       <p style={styles.text}>{item.text}</p>
       {item.cta && <a href={item.cta.href} tabIndex={active && ready ? 0 : -1} draggable={false}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        style={{...styles.cta, ...(focused ? focusRing : {})}}>{item.cta.label}</a>}
+        style={{...styles.cta, ...(focused && keyboardFocus ? focusRing : {outline: 'none'})}}>{item.cta.label}</a>}
     </motion.div>
   </motion.div>;
 }
 
 /** A centered, finite carousel with direct manipulation and token-based motion. */
-export function SwipeCarousel({items, startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
+export function SwipeCarousel({items, label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
   sideScale = .8, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps) {
   const count = items.length;
   const initial = Math.round(safeNumber(startIndex ?? Math.floor(count / 2), Math.floor(count / 2), 0, Math.max(0, count - 1)));
@@ -73,9 +77,26 @@ export function SwipeCarousel({items, startIndex, cardWidth = 'clamp(220px, 70vw
   const [ready, setReady] = useState(reduced || !fanOnView);
   const [imagesReady, setImagesReady] = useState(reduced || !fanOnView);
   const [focused, setFocused] = useState<string | null>(null);
+  const [keyboardFocus, setKeyboardFocus] = useState(true);
   const region = useRef<HTMLElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const measure = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const ownerDocument = region.current?.ownerDocument;
+    if (!ownerDocument) return;
+    const keyboardInput = (event: globalThis.KeyboardEvent) => {
+      if (!event.altKey && !event.ctrlKey && !event.metaKey) setKeyboardFocus(true);
+    };
+    const pointerInput = () => setKeyboardFocus(false);
+    // Capture inputs outside the carousel too: Tab into the region must restore
+    // its ring even when the previous interaction was a pointer drag.
+    ownerDocument.addEventListener('keydown', keyboardInput, true);
+    ownerDocument.addEventListener('pointerdown', pointerInput, true);
+    return () => {
+      ownerDocument.removeEventListener('keydown', keyboardInput, true);
+      ownerDocument.removeEventListener('pointerdown', pointerInput, true);
+    };
+  }, []);
   const inView = useInView(region, {once: true, amount: .25});
   const position = useMotionValue(-initial);
   const spread = useMotionValue(reduced || !fanOnView ? 1 : 0);
@@ -239,23 +260,23 @@ export function SwipeCarousel({items, startIndex, cardWidth = 'clamp(220px, 70vw
     goTo(next);
   }
 
-  return <section ref={region} role="region" aria-roledescription="carousel" aria-label="Image carousel"
+  return <section ref={region} role="region" aria-roledescription="carousel" aria-label={label}
     tabIndex={0} onKeyDown={keyDown} onFocus={event => { if (event.target === event.currentTarget) setFocused('region'); }}
     onBlur={event => { if (event.target === event.currentTarget) setFocused(null); }}
-    style={{...styles.region, ...(focused === 'region' ? focusRing : {})}}>
+    style={{...styles.region, ...(focused === 'region' && keyboardFocus ? focusRing : {outline: 'none'})}}>
     <div ref={viewport} aria-label="Drag or swipe cards" style={{...styles.viewport, cursor: count > 1 ? 'grab' : 'default'}}
       onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event => pointerEnd(event)}
       onPointerCancel={event => pointerEnd(event, true)} onLostPointerCapture={event => pointerEnd(event, true)}
       onClickCapture={event => { if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
-      {items.map((item, i) => <Card key={item.id} item={item} index={i} count={count} active={i === activeIndex} selectedIndex={activeIndex}
+      {items.map((item, i) => <Card key={item.id} item={item} index={i} count={count} active={i === activeIndex}
         ready={ready} eager={Math.abs(i - activeIndex) <= 1} position={position} spread={spread} step={step}
-        sideScale={neighborScale} cardWidth={cardWidth} reduced={reduced} imagesReady={imagesReady} measure={i === 0 ? measure : undefined}/>)}
+        sideScale={neighborScale} cardWidth={cardWidth} reduced={reduced} imagesReady={imagesReady} keyboardFocus={keyboardFocus} measure={i === 0 ? measure : undefined}/>)}
     </div>
     {showDots && <div style={styles.dots}>
       {items.map((item, i) => <button key={item.id} type="button" aria-label={`Go to card ${i + 1}`}
         aria-current={i === activeIndex ? 'true' : undefined} onClick={() => goTo(i)}
         onFocus={() => setFocused(item.id)} onBlur={() => setFocused(null)}
-        style={{...styles.dot, ...(focused === item.id ? focusRing : {})}}>
+        style={{...styles.dot, ...(focused === item.id && keyboardFocus ? focusRing : {outline: 'none'})}}>
         <motion.span aria-hidden="true" initial={false} animate={{scaleX: i === activeIndex ? 3 : 1, opacity: i === activeIndex ? 1 : .35}}
           transition={reduced ? {duration: 0} : {duration: durations.base, ease}} style={styles.dotMark}/>
       </button>)}

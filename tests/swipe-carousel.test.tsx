@@ -30,7 +30,15 @@ beforeEach(() => {
     disconnect() {}
   });
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
-  vi.stubGlobal('PointerEvent', MouseEvent);
+  vi.stubGlobal('PointerEvent', class extends MouseEvent {
+    readonly pointerId: number;
+    readonly pointerType: string;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+      this.pointerType = init.pointerType ?? 'mouse';
+    }
+  });
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({width: 360, height: 480, x: 0, y: 0, top: 0, left: 0, right: 360, bottom: 480, toJSON() {}});
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
@@ -120,6 +128,77 @@ describe('SwipeCarousel', () => {
     fireEvent.pointerMove(viewport, {clientX: 90, clientY: 10});
     fireEvent.pointerUp(viewport, {clientX: 90, clientY: 10});
     expect(screen.getByRole('button', {name: 'Go to card 3'}).getAttribute('aria-current')).not.toBe('true');
+  });
+  it('keeps the nearest card on top during a drag in either direction before release', async () => {
+    const onChange = vi.fn();
+    render(<Carousel startIndex={2} onChange={onChange}/>);
+    const viewport = screen.getByLabelText('Drag or swipe cards');
+    const cards = screen.getAllByRole('group');
+    const expectOnTop = (index: number) => {
+      const top = Number(cards[index].style.zIndex);
+      cards.forEach((card, i) => { if (i !== index) expect(top).toBeGreaterThan(Number(card.style.zIndex)); });
+    };
+    fireEvent.pointerDown(viewport, {clientX: 300, clientY: 10});
+    fireEvent.pointerMove(viewport, {clientX: 170, clientY: 10});
+    await waitFor(() => expectOnTop(3));
+    fireEvent.pointerMove(viewport, {clientX: 430, clientY: 10});
+    await waitFor(() => expectOnTop(1));
+    active(3);
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.pointerCancel(viewport);
+  });
+  it('updates stacking during horizontal wheel input before selection settles', async () => {
+    render(<Carousel startIndex={2}/>);
+    fireEvent.wheel(screen.getByLabelText('Drag or swipe cards'), {deltaX: 130});
+    await waitFor(() => {
+      const cards = screen.getAllByRole('group');
+      expect(Number(cards[3].style.zIndex)).toBeGreaterThan(Number(cards[2].style.zIndex));
+      active(3);
+    }, {timeout: 120, interval: 10});
+  });
+  it('keeps stacking with the current position instead of jumping to a spring destination', async () => {
+    preferences.reduced = false;
+    render(<Carousel startIndex={2} fanOnView={false}/>);
+    const cards = screen.getAllByRole('group');
+    fireEvent.click(screen.getByRole('button', {name: 'Go to card 6'}));
+    expect(Number(cards[2].style.zIndex)).toBeGreaterThan(Number(cards[5].style.zIndex));
+    await waitFor(() => expect(screen.getByRole('link', {name: 'Explore 6'})).toBeTruthy(), {timeout: 4000});
+    expect(Number(cards[5].style.zIndex)).toBeGreaterThan(Number(cards[2].style.zIndex));
+  });
+  it.each(['mouse', 'touch'])('hides the ring after a %s drag and restores it on Tab focus', pointerType => {
+    render(<Carousel/>);
+    const viewport = screen.getByLabelText('Drag or swipe cards');
+    fireEvent.pointerDown(viewport, {clientX: 300, clientY: 10, pointerType});
+    fireEvent.pointerMove(viewport, {clientX: 170, clientY: 10, pointerType});
+    fireEvent.pointerUp(viewport, {clientX: 170, clientY: 10, pointerType});
+    expect(document.activeElement).toBe(region());
+    expect(region().style.outline).toBe('none');
+    act(() => region().blur());
+    // jsdom does not perform Tab's default focus traversal; send the key then focus.
+    fireEvent.keyDown(document.body, {key: 'Tab'});
+    act(() => region().focus());
+    expect(region().style.outline).toBe('3px solid currentColor');
+    fireEvent.keyDown(region(), {key: 'ArrowLeft'});
+    expect(region().style.outline).toBe('3px solid currentColor');
+  });
+  it('uses keyboard-only focus rings for dots and the active CTA', () => {
+    render(<Carousel/>);
+    const dot = screen.getByRole('button', {name: 'Go to card 4'});
+    fireEvent.pointerDown(dot);
+    act(() => dot.focus());
+    expect(dot.style.outline).toBe('none');
+    fireEvent.keyDown(dot, {key: 'Tab'});
+    const link = screen.getByRole('link', {name: 'Explore 4'});
+    act(() => link.focus());
+    expect(link.style.outline).toBe('3px solid currentColor');
+    fireEvent.pointerDown(link);
+    expect(link.style.outline).toBe('none');
+  });
+  it('allows each carousel region to have its own accessible label', () => {
+    const {rerender} = render(<Carousel label="What's Inside"/>);
+    expect(screen.getByRole('region', {name: "What's Inside"})).toBeTruthy();
+    rerender(<Carousel/>);
+    expect(region()).toBeTruthy();
   });
   it('completes the entrance under React Strict Mode', async () => {
     preferences.reduced = false;

@@ -71,6 +71,14 @@
             "function"
           ],
           "description": "Called once when the selected index changes, including data shrinking; not on initial render or selecting the current card."
+        },
+        "label": {
+          "type": "string",
+          "default": "Image carousel",
+          "options": [
+            "Any non-empty accessible name"
+          ],
+          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
         }
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
