@@ -78,7 +78,7 @@
           "options": [
             "Any non-empty accessible name"
           ],
-          "description": "Accessible name for the carousel region, e.g. What\u2019s Inside. Use a distinct name when a page has multiple carousels."
+          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
         }
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
