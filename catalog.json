@@ -1,5 +1,88 @@
 {
   "library": "@wcc/motion-library",
   "version": "0.1.0",
-  "pieces": []
+  "pieces": [
+    {
+      "id": "swipe-carousel",
+      "name": "Swipe Carousel",
+      "export": "SwipeCarousel",
+      "summary": "Swipe through a row of image cards that gently settle with your chosen card in the center.",
+      "status": "beta",
+      "settings": {
+        "items": {
+          "type": "Array<{id: string, image: string, alt: string, title: string, text: string, cta?: {label: string, href: string}}>",
+          "default": [],
+          "required": true,
+          "min": 0,
+          "max": null,
+          "description": "Required array; stable unique IDs and image alt text. Empty lists are supported. No fixed upper limit. Keep titles and text concise enough to fit the card."
+        },
+        "startIndex": {
+          "type": "number",
+          "default": "Math.floor(items.length / 2)",
+          "min": 0,
+          "max": "items.length - 1",
+          "description": "Initial zero-based card; rounded and clamped. Later changes do not control selection."
+        },
+        "cardWidth": {
+          "type": "string",
+          "default": "clamp(220px, 70vw, 360px)",
+          "options": [
+            "Any valid CSS width, e.g. 280px, 70vw, or clamp(220px, 70vw, 360px)"
+          ],
+          "description": "Capped to carousel width minus 32px. Cards use a 3:4 aspect ratio."
+        },
+        "gap": {
+          "type": "number",
+          "default": 0.55,
+          "min": 0.3,
+          "max": 1.1,
+          "description": "Distance between card centers as a share of card width; clamped to range."
+        },
+        "sideScale": {
+          "type": "number",
+          "default": 0.8,
+          "min": 0.6,
+          "max": 1,
+          "description": "Scale of side cards; clamped to range."
+        },
+        "fanOnView": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ],
+          "description": "Fan out once per mounted carousel when it enters view; scrolling out and back does not replay."
+        },
+        "showDots": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ]
+        },
+        "onChange": {
+          "type": "(index: number) => void",
+          "default": null,
+          "options": [
+            "undefined",
+            "function"
+          ],
+          "description": "Called once when the selected index changes, including data shrinking; not on initial render or selecting the current card."
+        },
+        "label": {
+          "type": "string",
+          "default": "Image carousel",
+          "options": [
+            "Any non-empty accessible name"
+          ],
+          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
+        }
+      },
+      "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
+      "demo": "demo/swipe-carousel.html"
+    }
+  ]
 }
