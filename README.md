@@ -1,4 +1,4 @@
-# CP Motion Library (@cp/motion)
+# WCC Motion Library (@wcc/motion-library)
 
 Shared motion pieces for every CP website. The Website Command Center
 (WCC) reads `catalog.json` to know what pieces exist and what settings

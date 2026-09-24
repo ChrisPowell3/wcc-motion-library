@@ -1,4 +1,4 @@
-# CP Motion Library: rules for every builder (Codex, Claude, people)
+# WCC Motion Library: rules for every builder (Codex, Claude, people)
 
 This library holds hand-tuned motion pieces used by every CP website
 (TransformNation, ChrisPowell.com, M1M and future sites). Quality beats

@@ -1,5 +1,5 @@
 {
-  "library": "@cp/motion",
+  "library": "@wcc/motion-library",
   "version": "0.1.0",
   "pieces": []
 }

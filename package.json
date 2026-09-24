@@ -1,7 +1,7 @@
 {
-  "name": "@cp/motion",
+  "name": "@wcc/motion-library",
   "version": "0.1.0",
-  "description": "CP Motion Library: shared, hand-tuned, tested motion pieces for every CP website.",
+  "description": "WCC Motion Library: shared, hand-tuned, tested motion pieces for every CP website.",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
