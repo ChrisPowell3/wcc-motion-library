@@ -7,7 +7,7 @@
       "name": "Swipe Carousel",
       "export": "SwipeCarousel",
       "summary": "Swipe through a row of image cards that gently settle with your chosen card in the center.",
-      "status": "beta",
+      "status": "ready",
       "settings": {
         "items": {
           "type": "Array<{id: string, image: string, alt: string, title: string, text: string, cta?: {label: string, href: string}}>",
@@ -78,7 +78,7 @@
           "options": [
             "Any non-empty accessible name"
           ],
-          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
+          "description": "Accessible name for the carousel region, e.g. What\u2019s Inside. Use a distinct name when a page has multiple carousels."
         }
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
