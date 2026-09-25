@@ -36,6 +36,8 @@ interface SwipeCarouselOptions<T extends {id: string}> {
   cardAspect?: string;
   /** Optional radius, background and shadow overrides; omitted values keep the house look. */
   cardStyle?: SwipeCarouselCardStyle;
+  /** Overlay color for opaque side cards; transparent preserves legacy frame fading. */
+  dimColor?: string;
   /** Accessible name for the carousel region. Defaults to "Image carousel". */
   label?: string;
   /** Zero-based; defaults to Math.floor(items.length / 2), clamped to available cards. */
@@ -57,9 +59,9 @@ export type SwipeCarouselProps<T extends {id: string} = SwipeCarouselItem> = Swi
 
 type Gesture = {id: number; startX: number; startY: number; origin: number; lastX: number; lastTime: number; velocity: number; axis: 'pending' | 'x' | 'y'};
 
-function Card<T extends {id: string}>({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, cardAspect, cardStyle, renderCard, measure}: {
+function Card<T extends {id: string}>({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, cardAspect, cardStyle, dimColor, renderCard, measure}: {
   item: T; index: number; count: number; active: boolean; ready: boolean; eager: boolean;
-  cardAspect: string; cardStyle?: SwipeCarouselCardStyle; renderCard?: CardRenderer<T>;
+  cardAspect: string; dimColor: string; cardStyle?: SwipeCarouselCardStyle; renderCard?: CardRenderer<T>;
   position: MotionValue<number>; spread: MotionValue<number>; step: MotionValue<number>;
   sideScale: number; cardWidth: string; reduced: boolean; imagesReady: boolean; keyboardFocus: boolean; measure?: React.Ref<HTMLDivElement>;
 }) {
@@ -67,6 +69,8 @@ function Card<T extends {id: string}>({item, index, count, active, ready, eager,
   const x = useTransform(() => (index + position.get()) * step.get() * spread.get());
   const scale = useTransform(() => 1 - Math.min(distance.get(), 1) * (1 - sideScale));
   const opacity = useTransform(distance, [0, 1, 2, 3], [1, .9, .6, .3]);
+  const dimOpacity = useTransform(distance, [0, 1, 2, 3], [0, .1, .4, .7]);
+  const useDimOverlay = dimColor !== 'transparent';
   // Discrete stacking changes at half-card crossings, without tweening z-index.
   // Use the live distance so dragging, wheels, and spring travel share the same order.
   const zIndex = useTransform(() => count + 1 - Math.round(distance.get()));
@@ -78,8 +82,8 @@ function Card<T extends {id: string}>({item, index, count, active, ready, eager,
       borderRadius: cardStyle?.borderRadius ?? styles.card.borderRadius,
       background: cardStyle?.background ?? styles.card.background,
       boxShadow: cardStyle?.boxShadow ?? styles.card.boxShadow,
-      aspectRatio: cardAspect, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity, zIndex}}>
-    {renderCard ? <div inert={!active || !ready} style={{height: cardAspect === 'auto' ? undefined : '100%'}}>
+      aspectRatio: cardAspect, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity: useDimOverlay ? 1 : opacity, zIndex}}>
+    {renderCard ? <div inert={!active || !ready} style={{height: cardAspect === 'auto' ? undefined : '100%', isolation: useDimOverlay ? 'isolate' : undefined}}>
       {renderCard(item, {index, count, active, ready: active && ready, loadImage: eager || imagesReady})}
     </div> : <>
     <img src={eager || imagesReady ? defaultItem.image : undefined} alt={defaultItem.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} style={styles.image}/>
@@ -94,11 +98,13 @@ function Card<T extends {id: string}>({item, index, count, active, ready, eager,
         style={{...styles.cta, ...(focused && keyboardFocus ? focusRing : {outline: 'none'})}}>{defaultItem.cta.label}</a>}
     </motion.div>
     </>}
+    {useDimOverlay && <motion.div data-swipe-carousel-dim="" aria-hidden="true"
+      style={{position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: dimColor, opacity: dimOpacity}}/>}
   </motion.div>;
 }
 
 /** A centered, finite carousel with direct manipulation and token-based motion. */
-export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items, renderCard, cardAspect = '3 / 4', cardStyle, label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
+export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items, renderCard, cardAspect = '3 / 4', cardStyle, dimColor = 'transparent', label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
   sideScale = .8, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps<T>) {
   const count = items.length;
   const initial = Math.round(safeNumber(startIndex ?? Math.floor(count / 2), Math.floor(count / 2), 0, Math.max(0, count - 1)));
@@ -304,7 +310,7 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
       onPointerCancel={event => pointerEnd(event, true)} onLostPointerCapture={event => pointerEnd(event, true)}
       onClickCapture={event => { if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
       {items.map((item, i) => <Card key={item.id} item={item} index={i} count={count} active={i === activeIndex}
-        cardAspect={cardAspect} cardStyle={cardStyle} renderCard={renderCard}
+        cardAspect={cardAspect} cardStyle={cardStyle} dimColor={dimColor} renderCard={renderCard}
         ready={ready} eager={Math.abs(i - activeIndex) <= 1} position={position} spread={spread} step={step}
         sideScale={neighborScale} cardWidth={cardWidth} reduced={reduced} imagesReady={imagesReady} keyboardFocus={keyboardFocus} measure={i === 0 ? measure : undefined}/>)}
     </div>

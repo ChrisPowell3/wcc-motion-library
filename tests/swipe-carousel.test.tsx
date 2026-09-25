@@ -337,3 +337,40 @@ describe('SwipeCarousel custom cards', () => {
     expect(card.style.width).toBe('280px');
   });
 });
+
+describe('SwipeCarousel dim overlays', () => {
+  const overlays = () => screen.getAllByRole('group').map(card => card.querySelector<HTMLElement>('[data-swipe-carousel-dim]'));
+  it('keeps every frame opaque and dims the contents by distance when dimColor is set', async () => {
+    render(<library.SwipeCarousel items={customItems} dimColor="#f3f0e9" renderCard={item => <p>{item.heading}</p>}/>);
+    expect(screen.getAllByRole('group').map(card => getComputedStyle(card).opacity)).toEqual(['1', '1', '1', '1', '1', '1']);
+    expect(overlays().map(overlay => Number(overlay?.style.opacity))).toEqual([.7, .4, .1, 0, .1, .4]);
+    overlays().forEach(overlay => {
+      expect(overlay?.style.background).toBe('rgb(243, 240, 233)');
+      expect(overlay?.style.pointerEvents).toBe('none');
+      expect(overlay?.getAttribute('aria-hidden')).toBe('true');
+    });
+    fireEvent.click(screen.getByRole('button', {name: 'Go to card 2'}));
+    await waitFor(() => expect(overlays().map(overlay => Number(overlay?.style.opacity))).toEqual([.1, 0, .1, .4, .7, .7]));
+    expect(screen.getAllByRole('group').every(card => getComputedStyle(card).opacity === '1')).toBe(true);
+  });
+  it('interpolates the overlay during dragging while frames remain opaque', async () => {
+    render(<Carousel gap={.5} dimColor="#f3f0e9"/>);
+    const viewport = screen.getByLabelText('Drag or swipe cards');
+    fireEvent.pointerDown(viewport, {clientX: 300, clientY: 10});
+    fireEvent.pointerMove(viewport, {clientX: 210, clientY: 10});
+    await waitFor(() => {
+      const expected = [.7, .55, .25, .05, .05, .25];
+      overlays().forEach((overlay, i) => expect(Number(overlay?.style.opacity)).toBeCloseTo(expected[i]));
+    });
+    expect(screen.getAllByRole('group').every(card => getComputedStyle(card).opacity === '1')).toBe(true);
+    fireEvent.pointerCancel(viewport);
+  });
+  it('preserves legacy frame fading when dimColor is omitted or transparent', () => {
+    const {rerender} = render(<Carousel/>);
+    expect(screen.getAllByRole('group').map(card => Number(getComputedStyle(card).opacity))).toEqual([.3, .6, .9, 1, .9, .6]);
+    expect(overlays().every(overlay => overlay === null)).toBe(true);
+    rerender(<Carousel dimColor="transparent"/>);
+    expect(screen.getAllByRole('group').map(card => Number(getComputedStyle(card).opacity))).toEqual([.3, .6, .9, 1, .9, .6]);
+    expect(overlays().every(overlay => overlay === null)).toBe(true);
+  });
+});

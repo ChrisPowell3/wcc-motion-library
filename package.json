@@ -22,7 +22,8 @@
     "build": "tsc -p tsconfig.build.json",
     "check": "tsc --noEmit && vitest run",
     "test": "vitest run",
-    "demo": "vite demo"
+    "demo": "vite demo",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
     "react": ">=19",

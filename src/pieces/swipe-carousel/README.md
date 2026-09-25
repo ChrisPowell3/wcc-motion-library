@@ -38,6 +38,7 @@ const chapters = [{id: 'start', heading: 'Start here', artwork: '/start.svg'}];
   items={chapters}
   label="Chapters"
   cardAspect="auto"
+  dimColor="#f3f0e9"
   cardStyle={{borderRadius: 16, background: '#fff', boxShadow: 'none'}}
   renderCard={(item, state) => (
     <div style={{color: '#203c3b'}}>
@@ -67,3 +68,6 @@ Custom content controls its own visuals and may use `active`/`ready` for present
 `cardStyle` accepts `borderRadius`, `background`, and `boxShadow`. Omitted fields preserve today's look. The motion frame owns width, transforms, opacity, stacking and clipping. Put other styling inside your returned content. The exported `SwipeCarouselCardStyle` type describes these overrides.
 
 The custom-content wrapper is `inert` whenever its card is off-center or not yet ready. This blocks descendant links/buttons from pointer activation and keyboard focus without rewriting their props. The wrapper does not hide side-card designs visually. Normal active-card clicks retain their native behavior; horizontal dragging suppresses the resulting click before it reaches your handlers. Native image/link dragging is prevented so the pointer gesture remains with the carousel. Keep custom controls inside the returned DOM subtree (not portals), and retain visible keyboard focus styles.
+
+
+`dimColor` defaults to `"transparent"`, preserving the original fading of entire card frames. Set it to a page/background color (for example `"#f3f0e9"`) to keep every frame at opacity 1 and dim its contents with an internal overlay instead. The overlay follows live distance at opacity 0 / 0.1 / 0.4 / 0.7, capped at three cards away, and never intercepts clicks or keyboard focus. With opaque card backgrounds this avoids neighboring text/images showing through each other. Only the overlay's opacity changes; frame movement and all other motion behavior remain the same.

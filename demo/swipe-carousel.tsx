@@ -43,7 +43,7 @@ function Demo() {
           <h2 id="custom-cards-heading" style={{fontSize: 'clamp(34px, 5vw, 56px)', fontWeight: 500, letterSpacing: '-.05em', margin: '16px 0'}}>Your story. Your style.</h2>
           <p style={{fontSize: 15, color: '#586a63', lineHeight: 1.6}}>Six chapters, a fresh card design, and the same effortless movement.</p>
         </div>
-        <SwipeCarousel items={customItems} label="Explore the chapters" cardAspect="auto"
+        <SwipeCarousel items={customItems} label="Explore the chapters" cardAspect="auto" dimColor="#f3f0e9"
           cardStyle={{borderRadius: 18, background: '#fff', boxShadow: '0 10px 26px -18px rgba(0,0,0,.4)'}}
           renderCard={(item, {loadImage}) => <>
             <div style={{aspectRatio: '4 / 3', background: colors[item.number - 1]}}>

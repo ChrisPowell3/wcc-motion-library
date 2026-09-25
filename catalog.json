@@ -109,6 +109,15 @@
             "Object containing any subset of borderRadius, background and boxShadow"
           ],
           "description": "Static frame decoration; omitted fields retain the built-in look. Width, aspect, transforms, opacity and stacking remain controlled by the carousel."
+        },
+        "dimColor": {
+          "type": "string",
+          "default": "transparent",
+          "options": [
+            "transparent (legacy frame opacity)",
+            "Any CSS color, e.g. #f3f0e9"
+          ],
+          "description": "With a color, frames stay at opacity 1 and a non-interactive overlay dims contents by distance: 0 at center, 0.1 one away, 0.4 two away, 0.7 three or more away. Use the page background color with opaque card backgrounds to prevent cards showing through each other. transparent preserves original frame opacity fading."
         }
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
