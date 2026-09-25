@@ -1,5 +1,5 @@
 import {StrictMode} from 'react';
-import {act, cleanup, fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {act, cleanup, fireEvent, render, screen, waitFor, within} from '@testing-library/react';
 import {renderToString} from 'react-dom/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import * as library from '../src/index';
@@ -247,5 +247,130 @@ describe('SwipeCarousel', () => {
     render(<Carousel showDots={false}/>);
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(renderToString(<Carousel/>)).toContain('aria-roledescription="carousel"');
+  });
+});
+
+
+const customItems = Array.from({length: 6}, (_, index) => ({id: `custom-${index}`, heading: `Custom ${index + 1}`}));
+
+describe('SwipeCarousel custom cards', () => {
+  it('renders generic item content inside every motion frame without the built-in design', () => {
+    render(<library.SwipeCarousel items={customItems} renderCard={item => <h3>{item.heading}</h3>}/>);
+    screen.getAllByRole('group').forEach((card, index) => {
+      expect(within(card).getByText(`Custom ${index + 1}`)).toBeTruthy();
+    });
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+    expect(screen.queryByText('undefined')).toBeNull();
+  });
+  it('reports per-card active, ready and loadImage through fan-out and settling', async () => {
+    preferences.reduced = false;
+    render(<library.SwipeCarousel items={customItems} renderCard={(item, state) =>
+      <div data-testid={item.id} data-state={JSON.stringify(state)}>{item.heading}</div>}/>);
+    const state = (index: number) => JSON.parse(screen.getByTestId(`custom-${index}`).getAttribute('data-state')!);
+    expect(customItems.map((_, i) => state(i))).toEqual([
+      {index: 0, count: 6, active: false, ready: false, loadImage: false},
+      {index: 1, count: 6, active: false, ready: false, loadImage: false},
+      {index: 2, count: 6, active: false, ready: false, loadImage: true},
+      {index: 3, count: 6, active: true, ready: false, loadImage: true},
+      {index: 4, count: 6, active: false, ready: false, loadImage: true},
+      {index: 5, count: 6, active: false, ready: false, loadImage: false},
+    ]);
+    act(() => intersect(true));
+    await waitFor(() => expect(state(3).ready).toBe(true), {timeout: 4000});
+    expect(customItems.map((_, i) => state(i).loadImage)).toEqual([true, true, true, true, true, true]);
+    expect(state(2).ready).toBe(false);
+    fireEvent.click(screen.getByRole('button', {name: 'Go to card 2'}));
+    expect(state(1)).toEqual({index: 1, count: 6, active: true, ready: false, loadImage: true});
+    expect(state(3).active).toBe(false);
+    await waitFor(() => expect(state(1).ready).toBe(true), {timeout: 4000});
+  });
+  it('makes custom content immediately ready with reduced motion', () => {
+    render(<library.SwipeCarousel items={customItems} renderCard={(item, state) =>
+      <span data-testid={item.id}>{String(state.ready)} / {String(state.loadImage)}</span>}/>);
+    expect(screen.getByTestId('custom-3').textContent).toBe('true / true');
+    expect(screen.getByTestId('custom-0').textContent).toBe('false / true');
+  });
+  it.each(['a', 'button'] as const)('allows a custom %s click but suppresses its click handler and default action after dragging', tag => {
+    const onClick = vi.fn();
+    render(<library.SwipeCarousel items={customItems} renderCard={item => tag === 'a'
+      ? <a href={`#${item.id}`} onClick={onClick}>{item.heading}</a>
+      : <button onClick={onClick}>{item.heading}</button>}/>);
+    const control = screen.getByText('Custom 4');
+    expect(fireEvent.click(control, {detail: 1})).toBe(true);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    if (tag === 'a') expect(control.getAttribute('href')).toBe('#custom-3');
+    fireEvent.pointerDown(control, {clientX: 300, clientY: 10});
+    fireEvent.pointerMove(control, {clientX: 170, clientY: 10});
+    fireEvent.pointerUp(control, {clientX: 170, clientY: 10});
+    expect(fireEvent.click(control, {detail: 1})).toBe(false);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+  it('blocks native image/link dragging inside custom cards', () => {
+    render(<library.SwipeCarousel items={customItems} renderCard={item => <a href={`#${item.id}`}>{item.heading}</a>}/>);
+    expect(fireEvent.dragStart(screen.getByText('Custom 4'))).toBe(false);
+  });
+  it('keeps off-center custom controls inert and restores them when selected', () => {
+    render(<library.SwipeCarousel items={customItems} renderCard={item => <a href={`#${item.id}`}>{item.heading}</a>}/>);
+    expect(screen.getByText('Custom 1').closest('[inert]')).not.toBeNull();
+    expect(screen.getByText('Custom 4').closest('[inert]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', {name: 'Go to card 1'}));
+    expect(screen.getByText('Custom 1').closest('[inert]')).toBeNull();
+    expect(screen.getByText('Custom 4').closest('[inert]')).not.toBeNull();
+  });
+  it('moves keyboard focus out of a custom button before its card becomes inert', () => {
+    render(<library.SwipeCarousel items={customItems} renderCard={item => <button>{item.heading}</button>}/>);
+    const button = screen.getByText('Custom 4');
+    act(() => button.focus());
+    fireEvent.keyDown(button, {key: 'ArrowLeft'});
+    active(3);
+    expect(document.activeElement).toBe(region());
+  });
+  it('supports intrinsic height and frame decoration without changing the motion frame width', () => {
+    render(<library.SwipeCarousel items={customItems} cardAspect="auto" cardWidth="280px"
+      cardStyle={{borderRadius: 12, background: '#fff', boxShadow: 'none'}}
+      renderCard={item => <p>{item.heading}</p>}/>);
+    const card = screen.getAllByRole('group')[0];
+    expect(card.style.aspectRatio).toBe('auto');
+    expect(card.style.borderRadius).toBe('12px');
+    expect(card.style.background).toBe('rgb(255, 255, 255)');
+    expect(card.style.boxShadow).toBe('none');
+    expect(card.style.width).toBe('280px');
+  });
+});
+
+describe('SwipeCarousel dim overlays', () => {
+  const overlays = () => screen.getAllByRole('group').map(card => card.querySelector<HTMLElement>('[data-swipe-carousel-dim]'));
+  it('keeps every frame opaque and dims the contents by distance when dimColor is set', async () => {
+    render(<library.SwipeCarousel items={customItems} dimColor="#f3f0e9" renderCard={item => <p>{item.heading}</p>}/>);
+    expect(screen.getAllByRole('group').map(card => getComputedStyle(card).opacity)).toEqual(['1', '1', '1', '1', '1', '1']);
+    expect(overlays().map(overlay => Number(overlay?.style.opacity))).toEqual([.7, .4, .1, 0, .1, .4]);
+    overlays().forEach(overlay => {
+      expect(overlay?.style.background).toBe('rgb(243, 240, 233)');
+      expect(overlay?.style.pointerEvents).toBe('none');
+      expect(overlay?.getAttribute('aria-hidden')).toBe('true');
+    });
+    fireEvent.click(screen.getByRole('button', {name: 'Go to card 2'}));
+    await waitFor(() => expect(overlays().map(overlay => Number(overlay?.style.opacity))).toEqual([.1, 0, .1, .4, .7, .7]));
+    expect(screen.getAllByRole('group').every(card => getComputedStyle(card).opacity === '1')).toBe(true);
+  });
+  it('interpolates the overlay during dragging while frames remain opaque', async () => {
+    render(<Carousel gap={.5} dimColor="#f3f0e9"/>);
+    const viewport = screen.getByLabelText('Drag or swipe cards');
+    fireEvent.pointerDown(viewport, {clientX: 300, clientY: 10});
+    fireEvent.pointerMove(viewport, {clientX: 210, clientY: 10});
+    await waitFor(() => {
+      const expected = [.7, .55, .25, .05, .05, .25];
+      overlays().forEach((overlay, i) => expect(Number(overlay?.style.opacity)).toBeCloseTo(expected[i]));
+    });
+    expect(screen.getAllByRole('group').every(card => getComputedStyle(card).opacity === '1')).toBe(true);
+    fireEvent.pointerCancel(viewport);
+  });
+  it('preserves legacy frame fading when dimColor is omitted or transparent', () => {
+    const {rerender} = render(<Carousel/>);
+    expect(screen.getAllByRole('group').map(card => Number(getComputedStyle(card).opacity))).toEqual([.3, .6, .9, 1, .9, .6]);
+    expect(overlays().every(overlay => overlay === null)).toBe(true);
+    rerender(<Carousel dimColor="transparent"/>);
+    expect(screen.getAllByRole('group').map(card => Number(getComputedStyle(card).opacity))).toEqual([.3, .6, .9, 1, .9, .6]);
+    expect(overlays().every(overlay => overlay === null)).toBe(true);
   });
 });

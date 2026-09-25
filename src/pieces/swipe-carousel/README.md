@@ -1,4 +1,4 @@
-# Swipe Carousel
+# Swipe Carousel v0.2
 
 ```tsx
 'use client';
@@ -25,3 +25,49 @@ Drag horizontally with touch or a mouse, scroll sideways on a trackpad, focus th
 Fan-out runs once per mounted instance when it enters view. Reduced motion skips the fan and springs, and applies navigation instantly. The current card and its immediate left/right neighbors use eager image loading; all remaining images use native lazy loading, with their sources deferred until the opening fan has finished so the initial stack cannot trigger eager fetching. Trackpad deltas already include platform momentum, so they snap after an idle interval instead of adding a second flick projection.
 
 The library uses `useReducedMotion`, `useInView`, and motion values from `motion/react`. No DOM is read at module evaluation or server render time. The component module includes `'use client'` for Next.js.
+
+
+## Custom card designs
+
+`SwipeCarousel` infers your item type from `items`. Existing `SwipeCarouselItem` arrays and `SwipeCarouselProps` usages keep working. For other shapes, TypeScript requires `renderCard`; each item only needs a stable string `id`.
+
+```tsx
+const chapters = [{id: 'start', heading: 'Start here', artwork: '/start.svg'}];
+
+<SwipeCarousel
+  items={chapters}
+  label="Chapters"
+  cardAspect="auto"
+  dimColor="#f3f0e9"
+  cardStyle={{borderRadius: 16, background: '#fff', boxShadow: 'none'}}
+  renderCard={(item, state) => (
+    <div style={{color: '#203c3b'}}>
+      <img src={state.loadImage ? item.artwork : undefined} alt={item.heading}
+        style={{display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover'}}/>
+      <h3>{item.heading}</h3>
+      <a href={`/chapters/${item.id}`}>Read chapter</a>
+    </div>
+  )}
+/>
+```
+
+`renderCard` replaces all built-in content, including the image, text overlay and CTA. The callback returns React content and receives `SwipeCarouselCardState`:
+
+| Field | Meaning |
+| --- | --- |
+| `index` | Zero-based card index. |
+| `count` | Total number of cards. |
+| `active` | Selected center card; while settling, the destination card. |
+| `ready` | True only for the active card after fan-out/settling finishes, exactly when the built-in text starts fading. False during dragging. Instant with reduced motion. |
+| `loadImage` | True for the selected card and its immediate left/right neighbors initially; true for every card after fan-out or interaction. Gate custom image sources with this flag. With fan-out disabled or reduced motion, all sources may be assigned immediately, as in the built-in design; use native `loading="lazy"` for distant images. |
+
+Custom content controls its own visuals and may use `active`/`ready` for presentation. The library does not add a text overlay or fade to custom content. If you add animations inside your renderer, use the house tokens, animate only transform/opacity, and honor reduced motion.
+
+`cardAspect` defaults to `"3 / 4"`. Use `"auto"` with normal-flow custom content for intrinsic height; absolutely positioned content cannot establish that height. The shared grid reserves room for the tallest card, and the cards remain vertically centered. Height changes are not animated.
+
+`cardStyle` accepts `borderRadius`, `background`, and `boxShadow`. Omitted fields preserve today's look. The motion frame owns width, transforms, opacity, stacking and clipping. Put other styling inside your returned content. The exported `SwipeCarouselCardStyle` type describes these overrides.
+
+The custom-content wrapper is `inert` whenever its card is off-center or not yet ready. This blocks descendant links/buttons from pointer activation and keyboard focus without rewriting their props. The wrapper does not hide side-card designs visually. Normal active-card clicks retain their native behavior; horizontal dragging suppresses the resulting click before it reaches your handlers. Native image/link dragging is prevented so the pointer gesture remains with the carousel. Keep custom controls inside the returned DOM subtree (not portals), and retain visible keyboard focus styles.
+
+
+`dimColor` defaults to `"transparent"`, preserving the original fading of entire card frames. Set it to a page/background color (for example `"#f3f0e9"`) to keep every frame at opacity 1 and dim its contents with an internal overlay instead. The overlay follows live distance at opacity 0 / 0.1 / 0.4 / 0.7, capped at three cards away, and never intercepts clicks or keyboard focus. With opaque card backgrounds this avoids neighboring text/images showing through each other. Only the overlay's opacity changes; frame movement and all other motion behavior remain the same.
