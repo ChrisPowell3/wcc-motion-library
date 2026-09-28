@@ -78,7 +78,7 @@
           "options": [
             "Any non-empty accessible name"
           ],
-          "description": "Accessible name for the carousel region, e.g. What\u2019s Inside. Use a distinct name when a page has multiple carousels."
+          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
         },
         "renderCard": {
           "type": "(item: T, state: SwipeCarouselCardState) => ReactNode",
@@ -128,7 +128,7 @@
       "name": "Scroll Reveal Rise",
       "export": "ScrollRevealRise",
       "summary": "Content gently rises up and fades in as you scroll down to it, with images taking a touch longer and any group of items following one another in a quick cascade.",
-      "status": "beta",
+      "status": "ready",
       "settings": {
         "children": {
           "type": "ReactNode | ReactNode[]",
@@ -194,7 +194,7 @@
           "type": "string",
           "default": "0px 0px -10% 0px",
           "options": [
-            "1\u20134 signed px or % values accepted by IntersectionObserver"
+            "1–4 signed px or % values accepted by IntersectionObserver"
           ],
           "description": "Negative bottom margin starts slightly inside the viewport, before full visibility; percentages use root width. Threshold 0 observes stationary anchors. Initially visible items observe the actual viewport (zero margin). Invalid margins or missing observers fail open."
         }
