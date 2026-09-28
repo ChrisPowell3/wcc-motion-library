@@ -7,7 +7,7 @@
       "name": "Swipe Carousel",
       "export": "SwipeCarousel",
       "summary": "Swipe through your own card designs or image cards that gently settle in the center.",
-      "status": "beta",
+      "status": "ready",
       "settings": {
         "items": {
           "type": "readonly T[] where T extends {id: string}",
