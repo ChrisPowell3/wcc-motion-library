@@ -78,7 +78,7 @@
           "options": [
             "Any non-empty accessible name"
           ],
-          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
+          "description": "Accessible name for the carousel region, e.g. What\u2019s Inside. Use a distinct name when a page has multiple carousels."
         },
         "renderCard": {
           "type": "(item: T, state: SwipeCarouselCardState) => ReactNode",
@@ -122,6 +122,85 @@
       },
       "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
       "demo": "demo/swipe-carousel.html"
+    },
+    {
+      "id": "scroll-reveal-rise",
+      "name": "Scroll Reveal Rise",
+      "export": "ScrollRevealRise",
+      "summary": "Content gently rises up and fades in as you scroll down to it, with images taking a touch longer and any group of items following one another in a quick cascade.",
+      "status": "beta",
+      "settings": {
+        "children": {
+          "type": "ReactNode | ReactNode[]",
+          "default": null,
+          "required": true,
+          "options": [
+            "ReactNode",
+            "ReactNode[]"
+          ],
+          "description": "Required semantic content. Direct children animate separately; fragments animate as one item. Use stable keys for arrays. Supply alt text on images and accessible names on buttons. Each item adds two block wrappers; use in flow/grid/flex, not inside paragraphs or tag-constrained lists/tables."
+        },
+        "as": {
+          "type": "string",
+          "default": "block",
+          "options": [
+            "block",
+            "image",
+            "button"
+          ],
+          "description": "Motion preset, not an HTML tag. block/button: 24px, base, 0.5 opacity; image: 64px, slow, 0 opacity. Use image for large hero blocks too."
+        },
+        "distance": {
+          "type": "number",
+          "default": 24,
+          "min": 8,
+          "max": 120,
+          "description": "Pixels below rest; image default is 64. Clamped; non-finite values use the preset default."
+        },
+        "duration": {
+          "type": "string",
+          "default": "base",
+          "options": [
+            "fast",
+            "base",
+            "slow"
+          ],
+          "description": "Maps to durations tokens (180/320/600ms). Image default is slow. Text/button translation uses settleEase derived from springs.settle; opacity and images use ease."
+        },
+        "stagger": {
+          "type": "number",
+          "default": 90,
+          "min": 0,
+          "max": 300,
+          "description": "Milliseconds between direct siblings. Delay starts only after each item intersects, capped at nine beats and durations.entrance (900ms). Initial visible items cap delay at durations.fast. Non-finite values use 90."
+        },
+        "startOpacity": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 0.6,
+          "description": "Image default is 0, following the explicit prop contract. Use 0.5 for translucent images. Non-finite values use the preset default; initial visible items start at 0.8."
+        },
+        "once": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ],
+          "description": "One entrance per mounted keyed child. false instantly resets outside view for replay; focused content remains visible. Remount to restart a one-time reveal."
+        },
+        "margin": {
+          "type": "string",
+          "default": "0px 0px -10% 0px",
+          "options": [
+            "1\u20134 signed px or % values accepted by IntersectionObserver"
+          ],
+          "description": "Negative bottom margin starts slightly inside the viewport, before full visibility; percentages use root width. Threshold 0 observes stationary anchors. Initially visible items observe the actual viewport (zero margin). Invalid margins or missing observers fail open."
+        }
+      },
+      "reducedMotion": "useReducedMotion plus a live system preference listener skip transform, opacity animation and delays entirely. All content renders at rest and fully opaque, including during a preference change. No prop overrides the preference. Server HTML is also fully visible.",
+      "demo": "demo/scroll-reveal-rise.html"
     }
   ]
 }
