@@ -2,14 +2,15 @@ import {StrictMode} from 'react';
 import {act, cleanup, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import * as library from '../src';
-import {settleEase} from '../src/tokens';
+import {settleEase, springyEase} from '../src/tokens';
+import {animate} from 'motion/react';
 import type {ScrollRevealRiseProps} from '../src/pieces/scroll-reveal-rise/ScrollRevealRise';
 
 const preferences = vi.hoisted(() => ({reduced: false}));
-vi.mock('motion/react', async original => ({
-  ...await original<typeof import('motion/react')>(),
-  useReducedMotion: () => preferences.reduced,
-}));
+vi.mock('motion/react', async original => {
+  const motion = await original<typeof import('motion/react')>();
+  return {...motion, animate: vi.fn(motion.animate), useReducedMotion: () => preferences.reduced};
+});
 class Observer {
   static all: Observer[] = [];
   targets = new Set<Element>();
@@ -27,6 +28,7 @@ let media: EventTarget & {matches: boolean};
 const rect = (top: number) => ({top, bottom: top + 1500, left: 0, right: 360, width: 360, height: 1500, x: 0, y: top, toJSON() {}});
 beforeEach(() => {
   preferences.reduced = false;
+  vi.mocked(animate).mockClear();
   Observer.all = [];
   vi.stubGlobal('IntersectionObserver', Observer);
   media = Object.assign(new EventTarget(), {matches: false});
@@ -43,6 +45,101 @@ const finished = async (name = 'Continue') => waitFor(() => {
 }, {timeout: 2500});
 
 describe('ScrollRevealRise', () => {
+  it.each([
+    ['up', 'translateY(24px)'], ['down', 'translateY(-24px)'],
+    ['left', 'translateX(-24px)'], ['right', 'translateX(24px)'],
+  ] as const)('uses the %s dial on the rendered entrance', async (direction, transform) => {
+    render(<Reveal dials={{direction}}/>);
+    await waitFor(() => expect(frame().style.transform).toBe(transform));
+    enter(true); await finished();
+  });
+  it.each([['none', '1'], ['soft', '0.5'], ['full', '0']] as const)('uses %s fade without limiting the internal no-fade value', async (fade, opacity) => {
+    render(<Reveal dials={{fade}}/>);
+    await waitFor(() => expect(frame().style.transform).toBe('translateY(24px)'));
+    await waitFor(() => expect(frame().style.opacity).toBe(opacity));
+  });
+  it('repeats with the always dial and honors a late trigger', async () => {
+    render(<Reveal dials={{plays: 'always', start: 'late', direction: 'left'}}/>);
+    expect(Observer.all[0].options?.rootMargin).toBe(`0px 0px -${window.innerHeight * 0.4}px 0px`);
+    enter(true); await finished(); enter(false);
+    await waitFor(() => expect(frame().style.transform).toBe('translateX(-24px)'));
+  });
+  it('keeps late starts reachable on wide short viewports and updates after rotation', async () => {
+    vi.stubGlobal('innerWidth', 1920); vi.stubGlobal('innerHeight', 720);
+    render(<Reveal dials={{start: 'late', plays: 'always'}}/>);
+    expect(Observer.all.at(-1)?.options?.rootMargin).toBe('0px 0px -288px 0px');
+    act(() => { window.innerWidth = 720; window.innerHeight = 1280; window.dispatchEvent(new Event('resize')); });
+    expect(Observer.all[0].targets.size).toBe(0);
+    expect(Observer.all.at(-1)?.options?.rootMargin).toBe('0px 0px -512px 0px');
+    enter(true); await finished();
+  });
+  it('preserves explicit margins and completed one-time entrances across viewport resizes', async () => {
+    vi.stubGlobal('innerWidth', 1920); vi.stubGlobal('innerHeight', 720);
+    const view = render(<Reveal margin="0px 0px -25% 0px" dials={{start: 'late'}}/>);
+    expect(Observer.all.at(-1)?.options?.rootMargin).toBe('0px 0px -25% 0px');
+    view.rerender(<Reveal dials={{start: 'late'}}/>);
+    await waitFor(() => expect(frame().style.opacity).toBe('0.5'));
+    enter(true); await finished();
+    const count = Observer.all.length;
+    act(() => { window.innerHeight = 1280; window.dispatchEvent(new Event('resize')); });
+    expect(Observer.all).toHaveLength(count);
+    expect(frame().style.opacity).toBe('1');
+    expect(frame().style.transform).toBe('none');
+  });
+  it('contains horizontal entrances without clipping vertical motion or the anchor focus ring', async () => {
+    const view = render(<Reveal dials={{direction: 'right', size: 'large'}}/>);
+    await waitFor(() => expect(frame().style.transform).toBe('translateX(48px)'));
+    const anchor = frame().parentElement!;
+    expect(anchor.style.overflowX).toBe('clip');
+    expect(anchor.style.overflowY).toBe('visible');
+    act(() => screen.getByRole('button').focus());
+    await finished();
+    expect(anchor.style.outline).toBe('3px solid currentColor');
+    view.rerender(<Reveal dials={{direction: 'up'}}/>);
+    expect(anchor.style.overflowX).toBe('');
+  });
+  it('lets explicit false and zero override dials', async () => {
+    render(<Reveal once={false} startOpacity={0} stagger={0} margin="0px" dials={{plays: 'once', fade: 'none', start: 'late', cascade: 'cascade'}}/>);
+    expect(Observer.all[0].options?.rootMargin).toBe('0px');
+    await waitFor(() => expect(frame().style.opacity).toBe('0'));
+    enter(true); await finished(); enter(false);
+    await waitFor(() => expect(frame().style.opacity).toBe('0'));
+  });
+  it('reduced motion overrides every dial with fully visible content and no observer', () => {
+    preferences.reduced = true; media.matches = true;
+    render(<Reveal dials={{direction: 'left', size: 'large', fade: 'full', bounce: 'springy', plays: 'always', delay: 'long', cascade: 'cascade', start: 'late', speed: 'slow'}}/>);
+    expect(frame().style.opacity).toBe('1');
+    expect(frame().style.transform).toBe('none');
+    expect(Observer.all).toHaveLength(0);
+  });
+  it('passes dial timing and bounce to real animations and caps only the sibling wait', async () => {
+    render(<Reveal stagger={300} dials={{delay: 'long', speed: 'slow', bounce: 'springy'}}
+      children={Array.from({length: 20}, (_, i) => <p key={i}>Item {i}</p>)}/>);
+    enter(true);
+    const calls = vi.mocked(animate).mock.calls;
+    expect(calls[0][2]).toMatchObject({duration: 0.6, delay: 0.6, ease: springyEase});
+    expect(calls[38][2]).toMatchObject({duration: 0.6, delay: 1.5, ease: springyEase});
+    await finished('Item 19');
+  });
+  it('starts siblings together when requested while honoring the common delay', () => {
+    render(<Reveal dials={{cascade: 'together', delay: 'short'}}><span>One</span><span>Two</span></Reveal>);
+    enter(true);
+    const calls = vi.mocked(animate).mock.calls;
+    expect(calls[0][2]).toMatchObject({delay: 0.18});
+    expect(calls[2][2]).toMatchObject({delay: 0.18});
+  });
+  it('honors the initial delay while keeping already visible content readable', async () => {
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockReturnValue(rect(0));
+    render(<Reveal stagger={300} dials={{delay: 'long', start: 'late', fade: 'full', direction: 'left'}}><span>One</span><span>Two</span></Reveal>);
+    await waitFor(() => expect(frame('One').style.transform).toBe('translateX(-8px)'));
+    expect(frame('One').style.opacity).toBe('0.8');
+    expect(Observer.all[0].options?.rootMargin).toBe('0px');
+    enter(true);
+    const calls = vi.mocked(animate).mock.calls;
+    expect(calls[0][2]).toMatchObject({duration: 0.18, delay: 0.6});
+    expect(calls[2][2]).toMatchObject({duration: 0.18, delay: 0.78});
+    await finished('Two');
+  });
   it('exports the component', () => expect(typeof library.ScrollRevealRise).toBe('function'));
   it('renders content accessibly before intersection and reveals a tall item at its leading edge', async () => {
     render(<Reveal/>);

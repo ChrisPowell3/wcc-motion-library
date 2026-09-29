@@ -1,6 +1,6 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "pieces": [
     {
       "id": "swipe-carousel",
@@ -78,7 +78,7 @@
           "options": [
             "Any non-empty accessible name"
           ],
-          "description": "Accessible name for the carousel region, e.g. What’s Inside. Use a distinct name when a page has multiple carousels."
+          "description": "Accessible name for the carousel region, e.g. What\u2019s Inside. Use a distinct name when a page has multiple carousels."
         },
         "renderCard": {
           "type": "(item: T, state: SwipeCarouselCardState) => ReactNode",
@@ -118,10 +118,44 @@
             "Any CSS color, e.g. #f3f0e9"
           ],
           "description": "With a color, frames stay at opacity 1 and a non-interactive overlay dims contents by distance: 0 at center, 0.1 one away, 0.4 two away, 0.7 three or more away. Use the page background color with opaque card backgrounds to prevent cards showing through each other. transparent preserves original frame opacity fading."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Object of supported dial ids with exact word values from SHARED_DIALS and PIECE_DIALS"
+          ],
+          "description": "Validated with cleanDials. Unknown ids/values and unsupported dials are ignored. Existing explicit props override dials; absent values retain piece defaults. See dials, dialDefaults and unsupportedDials."
         }
       },
-      "reducedMotion": "useReducedMotion skips the fan-out and all springs. Navigation and content changes are instant; direct dragging and all controls remain available.",
-      "demo": "demo/swipe-carousel.html"
+      "reducedMotion": "Live system reduced-motion preference stops autoplay, fan-out, springs and fade transitions. Navigation settles instantly; direct dragging, horizontal wheel and all controls remain available. Server active content is fully visible before client entrance setup.",
+      "demo": "demo/swipe-carousel.html",
+      "dials": [
+        "speed",
+        "size",
+        "bounce",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "bounce": "soft",
+        "autoplay": "off",
+        "loop": "off",
+        "sideCards": "normal",
+        "flick": "normal"
+      },
+      "unsupportedDials": [
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start"
+      ]
     },
     {
       "id": "scroll-reveal-rise",
@@ -194,13 +228,56 @@
           "type": "string",
           "default": "0px 0px -10% 0px",
           "options": [
-            "1–4 signed px or % values accepted by IntersectionObserver"
+            "1\u20134 signed px or % values accepted by IntersectionObserver"
           ],
           "description": "Negative bottom margin starts slightly inside the viewport, before full visibility; percentages use root width. Threshold 0 observes stationary anchors. Initially visible items observe the actual viewport (zero margin). Invalid margins or missing observers fail open."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Object of supported dial ids with exact word values from SHARED_DIALS and PIECE_DIALS"
+          ],
+          "description": "Validated with cleanDials. Unknown ids/values and unsupported dials are ignored. Existing explicit props override dials; absent values retain piece defaults. See dials, dialDefaults and unsupportedDials. start early/middle/late uses 10/25/40% of viewport height, recalculated on resize; an explicit margin keeps native px/% semantics."
         }
       },
       "reducedMotion": "useReducedMotion plus a live system preference listener skip transform, opacity animation and delays entirely. All content renders at rest and fully opaque, including during a preference change. No prop overrides the preference. Server HTML is also fully visible.",
-      "demo": "demo/scroll-reveal-rise.html"
+      "demo": "demo/scroll-reveal-rise.html",
+      "dialDefaultsByPreset": {
+        "image": {
+          "speed": "slow",
+          "bounce": "none",
+          "fade": "full"
+        }
+      },
+      "dials": [
+        "speed",
+        "size",
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "bounce": "soft",
+        "plays": "once",
+        "delay": "none",
+        "cascade": "cascade",
+        "direction": "up",
+        "fade": "soft",
+        "start": "early"
+      },
+      "unsupportedDials": [
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ]
     }
   ]
 }

@@ -26,6 +26,16 @@ const settleEnd = settleCurve.next(settleWindow).value;
 export const settleEase = (progress: number) =>
   progress >= 1 ? 1 : Math.min(1, settleCurve.next(Math.max(0, progress) * settleWindow).value / settleEnd);
 
+// The springy dial uses the house snap spring's slight overshoot, normalized to
+// the chosen duration just like settleEase. Existing default motion is unchanged.
+const springyCurve = spring({...springs.snap, keyframes: [0, 1]});
+const springyEnd = springyCurve.next(settleWindow).value;
+export const springyEase = (progress: number) =>
+  progress >= 1 ? 1 : springyCurve.next(Math.max(0, progress) * settleWindow).value / springyEnd;
+
+// Give readers five entrance beats per card; no independent timer tuning system.
+export const autoplayTiming = {interval: durations.entrance * 5} as const;
+
 // How far one flick can travel, as a multiple of its speed.
 export const flick = {power: 0.18, maxItems: 4} as const;
 
