@@ -70,4 +70,28 @@ Custom content controls its own visuals and may use `active`/`ready` for present
 The custom-content wrapper is `inert` whenever its card is off-center or not yet ready. This blocks descendant links/buttons from pointer activation and keyboard focus without rewriting their props. The wrapper does not hide side-card designs visually. Normal active-card clicks retain their native behavior; horizontal dragging suppresses the resulting click before it reaches your handlers. Native image/link dragging is prevented so the pointer gesture remains with the carousel. Keep custom controls inside the returned DOM subtree (not portals), and retain visible keyboard focus styles.
 
 
-`dimColor` defaults to `"transparent"`, preserving the original fading of entire card frames. Set it to a page/background color (for example `"#f3f0e9"`) to keep every frame at opacity 1 and dim its contents with an internal overlay instead. The overlay follows live distance at opacity 0 / 0.1 / 0.4 / 0.7, capped at three cards away, and never intercepts clicks or keyboard focus. With opaque card backgrounds this avoids neighboring text/images showing through each other. Only the overlay's opacity changes; frame movement and all other motion behavior remain the same.
+`dimColor` defaults to `"transparent"`, preserving the original fading of entire card frames. Set it to a page/background color (for example `"#f3f0e9"`) to keep frames at opacity 1 (except the optional loop seam concealment) and dim their contents with an internal overlay instead. The overlay follows live distance at opacity 0 / 0.1 / 0.4 / 0.7, capped at three cards away, and never intercepts clicks or keyboard focus. With opaque card backgrounds this avoids neighboring text/images showing through each other. Only the overlay's opacity changes; frame movement and all other motion behavior remain the same.
+
+## Shared motion dials
+
+```tsx
+<SwipeCarousel items={items} dials={{speed: 'slow', sideCards: 'smaller', loop: 'on'}}/>
+```
+
+Omitting `dials` preserves the original finite carousel. Unsupported shared dials (`plays`, `delay`, `cascade`, `direction`, `fade`, `start`) and invalid values are ignored. Explicit `gap`, `sideScale`, and `dimColor` props retain precedence over their corresponding preset choices.
+
+| Dial | Values and effect | Default |
+| --- | --- | --- |
+| `speed` | `slow` / `normal` / `fast`: playback speed is `durations.base` divided by `durations.slow` / `durations.base` / `durations.fast`. Applies to fan, settling, content fade and dots. | `normal` |
+| `size` | `small` / `medium` / `large`: center spacing is 0.4 / 0.55 / 0.75 of card width; explicit `gap` wins. | `medium` |
+| `bounce` | `none`: eased tween; `soft`: house settle spring and original float fan; `springy`: house snap spring. | `soft` |
+| `autoplay` | `off` / `on`: advance every `durations.entrance × 5` seconds (currently 4.5 seconds). | `off` |
+| `loop` | `off`: stop at the first/last card. `on`: arrows, dots, dragging, horizontal wheel and autoplay wrap through the cards. | `off` |
+| `sideCards` | `normal`: original scale/dimming; `smaller`: scale 0.65, unless `sideScale` is explicit; `dimmer`: stronger dimming, retaining the chosen `dimColor`. | `normal` |
+| `flick` | `soft` / `normal` / `strong`: multiply house flick power and maximum travel by 0.5 / 1 / 1.5. Trackpad momentum is unchanged. | `normal` |
+
+`dimmer` uses frame opacity 1 / 0.65 / 0.35 / 0.15 at distances 0 / 1 / 2 / 3 when `dimColor` is transparent. A supplied overlay color keeps frames opaque and uses overlay opacity 0 / 0.35 / 0.65 / 0.85. The loop's opposite seam fades out cards briefly to conceal their repositioning; each item still has exactly one slide and one set of interactive content.
+
+Autoplay displays a native Pause/Resume button. It pauses while hovered, while focus is anywhere inside the region, from pointer down through release/cancel, while the document is hidden, while less than a quarter of the carousel is in view, and whenever reduced motion is enabled. Leaving a pause condition restarts a full interval; a manual pause stays paused until Resume is chosen. With loop off, autoplay stops on the last card. Zero or one item never creates an autoplay timer. Speed does not alter the reading interval.
+
+Reduced motion responds to live device preference changes. It stops autoplay and active animation, skips springs/fades, and keeps dots, keyboard, drag and wheel navigation functional with immediate settling. Server HTML exposes the active content; the entrance is prepared on the client before paint, with stable markup during hydration.

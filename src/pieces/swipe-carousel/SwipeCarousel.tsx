@@ -1,9 +1,12 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent, type PointerEvent} from 'react';
-import {animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type MotionValue} from 'motion/react';
-import {durations, ease, springs} from '../../tokens';
-import {clamp, landingIndex, resist, safeNumber} from './physics';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent, type PointerEvent} from 'react';
+import {animate, motion, useInView, useMotionValue, useTransform, type MotionValue} from 'motion/react';
+import {autoplayTiming, durations, ease} from '../../tokens';
+import type {MotionDials} from '../../dials';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference';
+import {resolveCarouselSettings} from './dials';
+import {cardOffset, clamp, landingIndex, resist, safeNumber, wrap} from './physics';
 import {focusRing, styles} from './styles';
 
 export interface SwipeCarouselItem {
@@ -32,6 +35,8 @@ type CardRenderer<T> = (item: T, state: SwipeCarouselCardState) => ReactNode;
 
 interface SwipeCarouselOptions<T extends {id: string}> {
   items: readonly T[];
+  /** Shared motion presets; explicit layout props take precedence. */
+  dials?: MotionDials;
   /** CSS aspect ratio, or "auto" for content-driven custom card height. */
   cardAspect?: string;
   /** Optional radius, background and shadow overrides; omitted values keep the house look. */
@@ -59,18 +64,25 @@ export type SwipeCarouselProps<T extends {id: string} = SwipeCarouselItem> = Swi
 
 type Gesture = {id: number; startX: number; startY: number; origin: number; lastX: number; lastTime: number; velocity: number; axis: 'pending' | 'x' | 'y'};
 
-function Card<T extends {id: string}>({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, cardAspect, cardStyle, dimColor, renderCard, measure}: {
+function Card<T extends {id: string}>({item, index, count, active, ready, eager, position, spread, step, sideScale, cardWidth, reduced, imagesReady, keyboardFocus, cardAspect, cardStyle, dimColor, dimmer, loop, speed, renderCard, measure}: {
   item: T; index: number; count: number; active: boolean; ready: boolean; eager: boolean;
-  cardAspect: string; dimColor: string; cardStyle?: SwipeCarouselCardStyle; renderCard?: CardRenderer<T>;
+  cardAspect: string; dimColor: string; dimmer: boolean; loop: boolean; speed: number; cardStyle?: SwipeCarouselCardStyle; renderCard?: CardRenderer<T>;
   position: MotionValue<number>; spread: MotionValue<number>; step: MotionValue<number>;
   sideScale: number; cardWidth: string; reduced: boolean; imagesReady: boolean; keyboardFocus: boolean; measure?: React.Ref<HTMLDivElement>;
 }) {
-  const distance = useTransform(() => Math.abs(index + position.get()));
-  const x = useTransform(() => (index + position.get()) * step.get() * spread.get());
+  const offset = useTransform(() => cardOffset(index + position.get(), count, loop));
+  const distance = useTransform(() => Math.abs(offset.get()));
+  const x = useTransform(() => offset.get() * step.get() * spread.get());
   const scale = useTransform(() => 1 - Math.min(distance.get(), 1) * (1 - sideScale));
-  const opacity = useTransform(distance, [0, 1, 2, 3], [1, .9, .6, .3]);
-  const dimOpacity = useTransform(distance, [0, 1, 2, 3], [0, .1, .4, .7]);
+  const opacity = useTransform(distance, [0, 1, 2, 3], dimmer ? [1, .65, .35, .15] : [1, .9, .6, .3]);
+  const dimOpacity = useTransform(distance, [0, 1, 2, 3], dimmer ? [0, .35, .65, .85] : [0, .1, .4, .7]);
   const useDimOverlay = dimColor !== 'transparent';
+  const frameOpacity = useTransform(() => {
+    // The original card crosses the circular seam only while transparent.
+    // This keeps one semantic slide per item, even with very short lists.
+    const seam = loop && count > 1 ? clamp((count / 2 - distance.get()) * 2, 0, 1) : 1;
+    return (useDimOverlay ? 1 : opacity.get()) * seam;
+  });
   // Discrete stacking changes at half-card crossings, without tweening z-index.
   // Use the live distance so dragging, wheels, and spring travel share the same order.
   const zIndex = useTransform(() => count + 1 - Math.round(distance.get()));
@@ -82,14 +94,14 @@ function Card<T extends {id: string}>({item, index, count, active, ready, eager,
       borderRadius: cardStyle?.borderRadius ?? styles.card.borderRadius,
       background: cardStyle?.background ?? styles.card.background,
       boxShadow: cardStyle?.boxShadow ?? styles.card.boxShadow,
-      aspectRatio: cardAspect, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity: useDimOverlay ? 1 : opacity, zIndex}}>
+      aspectRatio: cardAspect, width: cardWidth, maxWidth: 'calc(100% - 32px)', x, scale, opacity: frameOpacity, zIndex}}>
     {renderCard ? <div inert={!active || !ready} style={{height: cardAspect === 'auto' ? undefined : '100%', isolation: useDimOverlay ? 'isolate' : undefined}}>
       {renderCard(item, {index, count, active, ready: active && ready, loadImage: eager || imagesReady})}
     </div> : <>
     <img src={eager || imagesReady ? defaultItem.image : undefined} alt={defaultItem.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" draggable={false} style={styles.image}/>
     <motion.div aria-hidden={!active || !ready} inert={!active || !ready} initial={false}
       animate={{opacity: active && ready ? 1 : 0}}
-      transition={{duration: reduced || !active || !ready ? 0 : durations.base, ease}}
+      transition={{duration: reduced || !active || !ready ? 0 : durations.base / speed, ease}}
       style={{...styles.content, pointerEvents: active && ready ? 'auto' : 'none'}}>
       <h3 style={styles.title}>{defaultItem.title}</h3>
       <p style={styles.text}>{defaultItem.text}</p>
@@ -103,19 +115,20 @@ function Card<T extends {id: string}>({item, index, count, active, ready, eager,
   </motion.div>;
 }
 
-/** A centered, finite carousel with direct manipulation and token-based motion. */
-export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items, renderCard, cardAspect = '3 / 4', cardStyle, dimColor = 'transparent', label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap = .55,
-  sideScale = .8, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps<T>) {
+/** A centered carousel with direct manipulation, optional looping and token-based motion. */
+export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items, dials, renderCard, cardAspect = '3 / 4', cardStyle, dimColor, label = 'Image carousel', startIndex, cardWidth = 'clamp(220px, 70vw, 360px)', gap,
+  sideScale, fanOnView = true, showDots = true, onChange}: SwipeCarouselProps<T>) {
   const count = items.length;
   const initial = Math.round(safeNumber(startIndex ?? Math.floor(count / 2), Math.floor(count / 2), 0, Math.max(0, count - 1)));
-  const reduced = !!useReducedMotion();
-  const spacing = safeNumber(gap, .55, .3, 1.1);
-  const neighborScale = safeNumber(sideScale, .8, .6, 1);
+  const reduced = useReducedMotionPreference();
+  const settings = useMemo(() => resolveCarouselSettings({dials, gap, sideScale, dimColor}), [dials, gap, sideScale, dimColor]);
+  const {spacing, sideScale: neighborScale, loop, autoplay, speed} = settings;
   const [index, setIndex] = useState(initial);
   const activeIndex = clamp(index, 0, Math.max(0, count - 1));
   const selected = useRef(initial);
-  const [ready, setReady] = useState(reduced || !fanOnView);
-  const [imagesReady, setImagesReady] = useState(reduced || !fanOnView);
+  const intendedDestination = useRef(initial);
+  const [ready, setReady] = useState(true);
+  const [imagesReady, setImagesReady] = useState(!fanOnView);
   const [focused, setFocused] = useState<string | null>(null);
   const [keyboardFocus, setKeyboardFocus] = useState(true);
   const region = useRef<HTMLElement>(null);
@@ -137,9 +150,9 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
       ownerDocument.removeEventListener('pointerdown', pointerInput, true);
     };
   }, []);
-  const inView = useInView(region, {once: true, amount: .25});
+  const inView = useInView(region, {amount: .25});
   const position = useMotionValue(-initial);
-  const spread = useMotionValue(reduced || !fanOnView ? 1 : 0);
+  const spread = useMotionValue(1);
   const step = useMotionValue(360 * spacing);
   const played = useRef(reduced || !fanOnView);
   const motionRun = useRef<{stop(): void} | null>(null);
@@ -149,7 +162,39 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
   const suppressClick = useRef(false);
   const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wheelPosition = useRef<number | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const [focusWithin, setFocusWithin] = useState(false);
+  const [pointerHeld, setPointerHeld] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const doc = region.current?.ownerDocument;
+    if (!pointerHeld || !doc) return;
+    // Buttons do not capture their pointer: a release outside the region must
+    // still release the autoplay hold.
+    const release = () => setPointerHeld(false);
+    doc.addEventListener('pointerup', release);
+    doc.addEventListener('pointercancel', release);
+    return () => {
+      doc.removeEventListener('pointerup', release);
+      doc.removeEventListener('pointercancel', release);
+    };
+  }, [pointerHeld]);
   const change = useRef(onChange);
+  useLayoutEffect(() => {
+    // SSR and the first hydration render expose the active content. Prepare the
+    // optional entrance before the browser paints, never in the server markup.
+    if (!played.current && !reduced && fanOnView) { spread.set(0); setReady(false); }
+  }, [fanOnView, reduced, spread]);
+  useEffect(() => {
+    const doc = region.current?.ownerDocument;
+    if (!doc) return;
+    const update = () => setHidden(doc.hidden);
+    update(); doc.addEventListener('visibilitychange', update);
+    return () => doc.removeEventListener('visibilitychange', update);
+  }, []);
   useEffect(() => { change.current = onChange; }, [onChange]);
 
   const stop = useCallback(() => {
@@ -168,9 +213,32 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
     setReady(false);
   }, [stop, spread]);
 
-  const goTo = useCallback((next: number) => {
+  const previousLoop = useRef(loop);
+  useLayoutEffect(() => {
+    if (previousLoop.current === loop) return;
+    previousLoop.current = loop;
+    stop();
+    gesture.current = null;
+    played.current = true;
+    intendedDestination.current = selected.current;
+    position.set(-selected.current);
+    spread.set(1);
+    setReady(true);
+    setImagesReady(true);
+  }, [loop, stop, position, spread]);
+
+  const goTo = useCallback((next: number, direction: -1 | 0 | 1 = 0) => {
     begin();
-    const target = clamp(Math.round(next), 0, Math.max(0, count - 1));
+    const requested = Math.round(next);
+    const target = loop ? wrap(requested, count) : clamp(requested, 0, Math.max(0, count - 1));
+    // Directional steps continue from the pending unwrapped destination. A
+    // quick reversal at either seam returns along the same path, not a full lap.
+    // Dots and gesture releases choose the nearest copy to their live position.
+    const destination = loop && count > 1
+      ? direction ? intendedDestination.current + direction
+        : target + Math.round((-position.get() - target) / count) * count
+      : target;
+    intendedDestination.current = destination;
     if (selected.current !== target) {
       selected.current = target;
       setIndex(target);
@@ -178,14 +246,28 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
     }
     const run = generation.current;
     if (reduced) {
+      intendedDestination.current = target;
       position.set(-target);
       setReady(true);
     } else {
-      const animation = animate(position, -target, springs.settle);
+      const animation = animate(position, -destination, settings.settle);
+      animation.speed = speed;
       motionRun.current = animation;
-      animation.then(() => { if (generation.current === run) setReady(true); });
+      animation.then(() => {
+        if (generation.current === run) {
+          intendedDestination.current = target;
+          if (loop) position.set(-target);
+          setReady(true);
+        }
+      });
     }
-  }, [begin, count, position, reduced]);
+  }, [begin, count, position, reduced, loop, settings.settle, speed]);
+
+  useEffect(() => {
+    if (!autoplay || paused || hovered || focusWithin || pointerHeld || hidden || reduced || !inView || count < 2 || (!loop && activeIndex === count - 1)) return;
+    const timer = setInterval(() => goTo(selected.current + 1, 1), autoplayTiming.interval * 1000);
+    return () => clearInterval(timer);
+  }, [autoplay, paused, hovered, focusWithin, pointerHeld, hidden, reduced, inView, count, loop, activeIndex, goTo]);
 
   useEffect(() => {
     const node = measure.current;
@@ -204,15 +286,16 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
 
   useEffect(() => {
     if (reduced || !fanOnView) {
-      stop(); played.current = true; spread.set(1); position.set(-selected.current); setReady(true); setImagesReady(true);
+      stop(); played.current = true; intendedDestination.current = selected.current; spread.set(1); position.set(-selected.current); setReady(true); setImagesReady(true);
     } else if (inView && !played.current) {
       played.current = true;
       const run = generation.current;
-      const animation = animate(spread, 1, springs.float);
+      const animation = animate(spread, 1, settings.fan);
+      animation.speed = speed;
       fanRun.current = animation;
       animation.then(() => { if (run === generation.current) { setReady(true); setImagesReady(true); } });
     }
-  }, [inView, reduced, fanOnView, position, spread, stop]);
+  }, [inView, reduced, fanOnView, position, spread, stop, settings.fan, speed]);
 
   const previousCount = useRef(count);
   useEffect(() => {
@@ -236,7 +319,7 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
       }
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? node.clientWidth : 1;
       wheelPosition.current -= event.deltaX * unit / step.get();
-      position.set(resist(wheelPosition.current, count));
+      position.set(loop ? wheelPosition.current : resist(wheelPosition.current, count));
       if (wheelTimer.current) clearTimeout(wheelTimer.current);
       // Trackpads already provide inertial deltas; settle after the stream stops.
       wheelTimer.current = setTimeout(() => goTo(-position.get()), durations.fast * 1000);
@@ -247,7 +330,7 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
       if (wheelTimer.current) clearTimeout(wheelTimer.current);
       wheelPosition.current = null;
     };
-  }, [begin, count, goTo, position, step]);
+  }, [begin, count, goTo, position, step, loop]);
 
   function pointerDown(event: PointerEvent<HTMLDivElement>) {
     if (count < 2 || event.button !== 0 || gesture.current) return;
@@ -274,7 +357,8 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
     const elapsed = event.timeStamp - drag.lastTime;
     if (elapsed > 0) drag.velocity = (event.clientX - drag.lastX) / elapsed * 1000;
     drag.lastX = event.clientX; drag.lastTime = event.timeStamp;
-    position.set(resist(drag.origin + dx / step.get(), count));
+    const next = drag.origin + dx / step.get();
+    position.set(loop ? next : resist(next, count));
   }
   function pointerEnd(event: PointerEvent<HTMLDivElement>, cancelled = false) {
     const drag = gesture.current;
@@ -282,7 +366,7 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
     gesture.current = null;
     if (drag.axis === 'x') {
       const velocity = event.timeStamp - drag.lastTime > durations.fast * 1000 ? 0 : drag.velocity;
-      goTo(cancelled ? selected.current : landingIndex(position.get(), velocity, step.get(), count));
+      goTo(cancelled ? selected.current : landingIndex(position.get(), velocity, step.get(), count, {loop, power: settings.flickPower, maxItems: settings.flickMaxItems}));
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     }
   }
@@ -297,11 +381,17 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
     event.preventDefault();
     // Departing card content becomes inert; keep keyboard focus on the carousel.
     if ((event.target as HTMLElement).closest('[aria-roledescription="slide"]')) region.current?.focus({preventScroll: true});
-    goTo(next);
+    goTo(next, event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0);
   }
 
   return <section ref={region} role="region" aria-roledescription="carousel" aria-label={label}
-    tabIndex={0} onKeyDown={keyDown} onFocus={event => { if (event.target === event.currentTarget) setFocused('region'); }}
+    tabIndex={0} onKeyDown={keyDown}
+    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+    onFocusCapture={() => setFocusWithin(true)}
+    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false); }}
+    onPointerDownCapture={() => setPointerHeld(true)} onPointerUpCapture={() => setPointerHeld(false)}
+    onPointerCancelCapture={() => setPointerHeld(false)} onLostPointerCaptureCapture={() => setPointerHeld(false)}
+    onFocus={event => { if (event.target === event.currentTarget) setFocused('region'); }}
     onBlur={event => { if (event.target === event.currentTarget) setFocused(null); }}
     style={{...styles.region, ...(focused === 'region' && keyboardFocus ? focusRing : {outline: 'none'})}}>
     <div ref={viewport} aria-label="Drag or swipe cards" style={{...styles.viewport, cursor: count > 1 ? 'grab' : 'default'}}
@@ -310,7 +400,7 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
       onPointerCancel={event => pointerEnd(event, true)} onLostPointerCapture={event => pointerEnd(event, true)}
       onClickCapture={event => { if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
       {items.map((item, i) => <Card key={item.id} item={item} index={i} count={count} active={i === activeIndex}
-        cardAspect={cardAspect} cardStyle={cardStyle} dimColor={dimColor} renderCard={renderCard}
+        cardAspect={cardAspect} cardStyle={cardStyle} dimColor={settings.dimColor} dimmer={settings.dimmer} loop={loop} speed={speed} renderCard={renderCard}
         ready={ready} eager={Math.abs(i - activeIndex) <= 1} position={position} spread={spread} step={step}
         sideScale={neighborScale} cardWidth={cardWidth} reduced={reduced} imagesReady={imagesReady} keyboardFocus={keyboardFocus} measure={i === 0 ? measure : undefined}/>)}
     </div>
@@ -320,9 +410,14 @@ export function SwipeCarousel<T extends {id: string} = SwipeCarouselItem>({items
         onFocus={() => setFocused(item.id)} onBlur={() => setFocused(null)}
         style={{...styles.dot, ...(focused === item.id && keyboardFocus ? focusRing : {outline: 'none'})}}>
         <motion.span aria-hidden="true" initial={false} animate={{scaleX: i === activeIndex ? 3 : 1, opacity: i === activeIndex ? 1 : .35}}
-          transition={reduced ? {duration: 0} : {duration: durations.base, ease}} style={styles.dotMark}/>
+          transition={reduced ? {duration: 0} : {duration: durations.base / speed, ease}} style={styles.dotMark}/>
       </button>)}
     </div>}
-    <span aria-live="polite" aria-atomic="true" style={styles.srOnly}>{count ? `Card ${activeIndex + 1} of ${count}${'title' in items[activeIndex] && typeof items[activeIndex].title === 'string' ? `: ${items[activeIndex].title}` : ''}` : 'No cards'}</span>
+    {autoplay && <button type="button" onClick={() => setPaused(value => !value)}
+      onFocus={() => setFocused('autoplay')} onBlur={() => setFocused(null)}
+      style={{display: 'block', margin: '12px auto', padding: '8px 14px', color: 'inherit', background: 'transparent', border: '1px solid currentColor', borderRadius: 6, cursor: 'pointer', ...(focused === 'autoplay' && keyboardFocus ? focusRing : {outline: 'none'})}}>
+      {paused ? 'Resume autoplay' : 'Pause autoplay'}
+    </button>}
+    <span aria-live={autoplay && !paused && !(mounted && reduced) && !focusWithin ? 'off' : 'polite'} aria-atomic="true" style={styles.srOnly}>{count ? `Card ${activeIndex + 1} of ${count}${'title' in items[activeIndex] && typeof items[activeIndex].title === 'string' ? `: ${items[activeIndex].title}` : ''}` : 'No cards'}</span>
   </section>;
 }

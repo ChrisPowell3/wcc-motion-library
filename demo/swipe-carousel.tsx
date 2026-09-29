@@ -1,6 +1,7 @@
 import {StrictMode, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {SwipeCarousel, type SwipeCarouselItem} from '../src';
+import {SwipeCarousel, type SwipeCarouselItem, type MotionDials} from '../src';
+import {DialPanel} from './DialPanel';
 
 const colors = ['#465e72', '#927061', '#6a7158', '#287367', '#75648c', '#a7783e'];
 const titles = ['Find your rhythm.', 'Start with one step.', 'Make room to grow.', 'Move with purpose.', 'Build your strength.', 'Keep showing up.'];
@@ -20,10 +21,12 @@ const customItems = items.map((item, index) => ({
 
 function Demo() {
   const [index, setIndex] = useState(3);
+  const [dials, setDials] = useState<MotionDials>({});
+  const [mount, setMount] = useState(0);
   return <>
     <header style={{maxWidth: 1280, margin: '0 auto', padding: '28px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16}}>
       <a href="./index.html" style={{color: 'inherit', textDecoration: 'none', fontWeight: 800, fontSize: 15, letterSpacing: '-.02em'}}>WCC / MOTION LIBRARY</a>
-      <span style={{fontSize: 11, letterSpacing: '.12em'}}>PIECE 001 · V0.2 · BETA</span>
+      <span style={{fontSize: 11, letterSpacing: '.12em'}}>PIECE 001 · V0.3 · BETA</span>
     </header>
     <main>
       <section style={{textAlign: 'center', maxWidth: 680, padding: '64px 24px 24px', margin: 'auto'}}>
@@ -31,7 +34,8 @@ function Demo() {
         <h1 style={{fontSize: 'clamp(46px, 8vw, 88px)', lineHeight: .98, letterSpacing: '-.065em', fontWeight: 500, margin: '22px 0'}}>One move.<br/>A new perspective.</h1>
         <p style={{fontSize: 16, lineHeight: 1.6, color: '#586a63', maxWidth: 400, margin: '24px auto 8px'}}>Drag, swipe, or use the arrow keys.<br/>Find the card that speaks to you.</p>
       </section>
-      <SwipeCarousel items={items} onChange={setIndex}/>
+      <div style={{padding: "0 20px"}}><DialPanel pieceId="swipe-carousel" value={dials} onChange={setDials} onReplay={() => setMount(value => value + 1)}/></div>
+      <SwipeCarousel key={mount} dials={dials} items={items} onChange={setIndex}/>
       <p style={{textAlign: 'center', fontSize: 11, letterSpacing: '.15em', margin: '16px 0 72px'}}>CHAPTER {String(index + 1).padStart(2, '0')} / 06</p>
       <section style={{maxWidth: 1100, margin: '0 auto', borderTop: '1px solid #c8cfc4', padding: '36px 24px 80px', display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between'}}>
         <div><h2 style={{fontSize: 24, fontWeight: 500, letterSpacing: '-.04em', margin: '0 0 12px'}}>Built to feel natural.</h2><p style={{fontSize: 14, lineHeight: 1.7, maxWidth: 360, color: '#586a63'}}>Direct touch. A soft landing. Just enough motion to keep your place.</p></div>
@@ -43,7 +47,7 @@ function Demo() {
           <h2 id="custom-cards-heading" style={{fontSize: 'clamp(34px, 5vw, 56px)', fontWeight: 500, letterSpacing: '-.05em', margin: '16px 0'}}>Your story. Your style.</h2>
           <p style={{fontSize: 15, color: '#586a63', lineHeight: 1.6}}>Six chapters, a fresh card design, and the same effortless movement.</p>
         </div>
-        <SwipeCarousel items={customItems} label="Explore the chapters" cardAspect="auto" dimColor="#f3f0e9"
+        <SwipeCarousel key={`custom-${mount}`} dials={dials} items={customItems} label="Explore the chapters" cardAspect="auto" dimColor="#f3f0e9"
           cardStyle={{borderRadius: 18, background: '#fff', boxShadow: '0 10px 26px -18px rgba(0,0,0,.4)'}}
           renderCard={(item, {loadImage}) => <>
             <div style={{aspectRatio: '4 / 3', background: colors[item.number - 1]}}>
