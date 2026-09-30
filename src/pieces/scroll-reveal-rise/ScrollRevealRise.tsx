@@ -1,7 +1,7 @@
 'use client';
 
 import {Children, useLayoutEffect, useRef, useState, type ReactNode} from 'react';
-import {animate, motion, useMotionValue} from 'motion/react';
+import {animate, motion, useMotionValue, useTransform} from 'motion/react';
 import {durations, ease} from '../../tokens';
 import type {MotionDials} from '../../dials';
 import {useReducedMotionPreference} from '../../useReducedMotionPreference';
@@ -20,8 +20,14 @@ export interface ScrollRevealRiseProps {
   as?: 'block' | 'image' | 'button';
   /** Travel in px, clamped to 8–120. Default: 24; image: 64. */
   distance?: number;
-  /** Token duration. Default: base; image: slow. */
-  duration?: 'fast' | 'base' | 'slow';
+  /** House duration name or seconds (0–5). Default: base; image: slow. */
+  duration?: 'fast' | 'base' | 'slow' | number;
+  /** Initial delay in milliseconds, 0–5000. Default: 0. */
+  delay?: number;
+  /** Entrance blur in px, 0–10. Default: 0. Ends at filter: none. */
+  blur?: number;
+  /** Explicit trigger overrides start dial. Default: scroll. */
+  trigger?: 'scroll' | 'load';
   /** Sibling delay in ms, clamped to 0–300. Default: 90. */
   stagger?: number;
   /** Initial opacity, clamped to 0–0.6. Default: 0.5; image: 0. */
@@ -38,7 +44,7 @@ type ItemProps = Omit<ReturnType<typeof resolveRevealDials>, 'stagger'> & {
   reduced: boolean;
 };
 
-function RevealItem({children, as, distance, duration, startOpacity, once, margin, startInset, delay, siblingDelay, axis, offsetSign, bounceEase, reduced}: ItemProps) {
+function RevealItem({children, as, distance, duration, blur, trigger, startOpacity, once, margin, startInset, delay, siblingDelay, axis, offsetSign, bounceEase, reduced}: ItemProps) {
   const anchor = useRef<HTMLDivElement>(null);
   const shown = useRef(false);
   const focused = useRef(false);
@@ -48,16 +54,18 @@ function RevealItem({children, as, distance, duration, startOpacity, once, margi
   // for reduced-motion viewers and clients where JavaScript never runs.
   const offset = useMotionValue(0);
   const opacity = useMotionValue(1);
+  const blurValue = useMotionValue(0);
+  const filter = useTransform(blurValue, value => value <= 0 ? 'none' : `blur(${value}px)`);
 
   useLayoutEffect(() => {
     const element = anchor.current;
     if (!element) return;
     let observer: IntersectionObserver | undefined;
     let active = true;
-    const stop = () => { offset.stop(); opacity.stop(); };
+    const stop = () => { offset.stop(); opacity.stop(); blurValue.stop(); };
     const final = () => {
       stop(); shown.current = true;
-      offset.set(0); opacity.set(1);
+      offset.set(0); opacity.set(1); blurValue.set(0);
       if (once) observer?.disconnect();
     };
     revealNow.current = final;
@@ -66,25 +74,40 @@ function RevealItem({children, as, distance, duration, startOpacity, once, margi
       final();
       return stop;
     }
-    if (typeof IntersectionObserver === 'undefined') {
+    if (trigger !== 'load' && typeof IntersectionObserver === 'undefined') {
       final();
       return stop;
     }
     const rect = element.getBoundingClientRect();
-    let initial = rect.top < window.innerHeight && rect.bottom > 0 && rect.left < window.innerWidth && rect.right > 0;
+    let initial = trigger !== 'load' && blur === 0 && rect.top < window.innerHeight && rect.bottom > 0 && rect.left < window.innerWidth && rect.right > 0;
     const prepare = () => {
       stop();
       // Autofocus runs during commit, and props can change while a descendant
       // remains focused. Neither case may put the active control back in hiding.
       if (focused.current) {
         shown.current = true;
-        offset.set(0); opacity.set(1);
+        offset.set(0); opacity.set(1); blurValue.set(0);
         return;
       }
       offset.set(offsetSign * (initial ? Math.min(distance, 8) : distance));
       opacity.set(initial ? Math.max(startOpacity, 0.8) : startOpacity);
+      blurValue.set(blur);
     };
     prepare();
+    const play = () => {
+      shown.current = true;
+      const seconds = initial ? durations.fast : typeof duration === 'number' ? duration : durations[duration];
+      const wait = delay + (initial ? Math.min(siblingDelay, durations.fast) : siblingDelay);
+      animate(offset, 0, {type: 'tween', duration: seconds, delay: wait, ease: initial ? ease : bounceEase});
+      animate(opacity, 1, {type: 'tween', duration: seconds, delay: wait, ease});
+      if (blur > 0) animate(blurValue, 0, {type: 'tween', duration: seconds, delay: wait, ease});
+    };
+    if (trigger === 'load') {
+      // Defer playback until commit settles, so StrictMode's setup/cleanup
+      // rehearsal cannot consume a one-time load entrance before it paints.
+      queueMicrotask(() => {if (active && !focused.current) play();});
+      return () => { active = false; stop(); revealNow.current = () => {}; };
+    }
     let inside = false;
     let observerGeneration = 0;
     const connectObserver = () => {
@@ -110,10 +133,7 @@ function RevealItem({children, as, distance, duration, startOpacity, once, margi
             if (inside || (once && shown.current) || focused.current) continue;
             inside = true;
             shown.current = true;
-            const seconds = initial ? durations.fast : durations[duration];
-            const wait = delay + (initial ? Math.min(siblingDelay, durations.fast) : siblingDelay);
-            animate(offset, 0, {type: 'tween', duration: seconds, delay: wait, ease: initial ? ease : bounceEase});
-            animate(opacity, 1, {type: 'tween', duration: seconds, delay: wait, ease});
+            play();
             initial = false;
             if (once) observer?.disconnect();
           }
@@ -135,7 +155,7 @@ function RevealItem({children, as, distance, duration, startOpacity, once, margi
       stop();
       revealNow.current = () => {};
     };
-  }, [distance, duration, startOpacity, once, margin, startInset, delay, siblingDelay, offsetSign, bounceEase, reduced, offset, opacity]);
+  }, [distance, duration, blur, trigger, blurValue, startOpacity, once, margin, startInset, delay, siblingDelay, offsetSign, bounceEase, reduced, offset, opacity]);
 
   return <div ref={anchor} style={{...styles.anchor, ...(axis === 'x' ? {overflowX: 'clip', overflowY: 'visible'} as const : {}), ...(as === 'button' ? styles.button : {}), ...(focusVisible ? styles.focus : {})}}
     onFocusCapture={event => {
@@ -149,7 +169,7 @@ function RevealItem({children, as, distance, duration, startOpacity, once, margi
         setFocusVisible(false);
       }
     }}>
-    <motion.div initial={false} style={{...styles.content, x: axis === 'x' ? offset : 0, y: axis === 'y' ? offset : 0, opacity}}>{children}</motion.div>
+    <motion.div initial={false} style={{...styles.content, x: axis === 'x' ? offset : 0, y: axis === 'y' ? offset : 0, opacity, filter}}>{children}</motion.div>
   </div>;
 }
 

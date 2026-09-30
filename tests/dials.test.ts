@@ -4,7 +4,7 @@ import * as library from '../src';
 const shared = {
   speed: ['slow', 'normal', 'fast'], size: ['small', 'medium', 'large'], bounce: ['none', 'soft', 'springy'],
   plays: ['once', 'always'], delay: ['none', 'short', 'long'], cascade: ['together', 'cascade'],
-  direction: ['up', 'down', 'left', 'right'], fade: ['none', 'soft', 'full'], start: ['early', 'middle', 'late'],
+  direction: ['up', 'down', 'left', 'right'], fade: ['none', 'soft', 'full'], start: ['early', 'middle', 'late', 'load'], blur: ['none', 'soft', 'strong'],
 };
 const piece = {autoplay: ['off', 'on'], loop: ['off', 'on'], sideCards: ['normal', 'smaller', 'dimmer'], flick: ['soft', 'normal', 'strong']};
 
@@ -44,3 +44,9 @@ describe('shared motion dials', () => {
     expect(library.cleanDials('swipe-carousel', new Proxy({}, {getOwnPropertyDescriptor() {throw new Error('trap');}}))).toEqual({});
   });
 });
+
+ it('limits marquee directions and registers each new piece support', () => {
+   expect(library.cleanDials('marquee', {direction:'up', speed:'fast', blur:'strong'})).toEqual({speed:'fast'});
+   expect(library.cleanDials('scroll-focus', {blur:'strong',size:'small',plays:'always'})).toEqual({blur:'strong',size:'small'});
+   expect(library.cleanDials('count-up',{plays:'always',delay:'short',fade:'full'})).toEqual({plays:'always',delay:'short'});
+ });

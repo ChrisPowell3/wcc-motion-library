@@ -8,7 +8,8 @@ export const SHARED_DIALS = Object.freeze({
   cascade: Object.freeze(['together', 'cascade'] as const),
   direction: Object.freeze(['up', 'down', 'left', 'right'] as const),
   fade: Object.freeze(['none', 'soft', 'full'] as const),
-  start: Object.freeze(['early', 'middle', 'late'] as const),
+  start: Object.freeze(['early', 'middle', 'late', 'load'] as const),
+  blur: Object.freeze(['none', 'soft', 'strong'] as const),
 });
 
 /** Additional dial ids used by specialized pieces; currently carousel-only. */
@@ -26,6 +27,16 @@ const vocabulary: Readonly<Record<DialId, readonly string[]>> = {...SHARED_DIALS
 const support: Readonly<Record<string, readonly DialId[]>> = {
   'scroll-reveal-rise': Object.keys(SHARED_DIALS) as (keyof typeof SHARED_DIALS)[],
   'swipe-carousel': ['speed', 'size', 'bounce', 'autoplay', 'loop', 'sideCards', 'flick'],
+  'scroll-focus': ['speed', 'size', 'blur'],
+  'count-up': ['speed', 'delay', 'plays'],
+  'star-pop': ['speed', 'bounce', 'delay'],
+  'marquee': ['speed', 'direction', 'size'],
+  'float': ['speed', 'size'],
+  'hover-tilt': ['size', 'speed'],
+  'hover-lift': ['size', 'speed'],
+  'image-hover-zoom': ['size', 'speed'],
+  'accordion': ['speed', 'cascade'],
+  'cta-pills': ['speed', 'size', 'blur', 'delay'],
 };
 
 /**
@@ -41,7 +52,8 @@ export function cleanDials(pieceId: string, input: unknown): MotionDials {
       try {
         if (!Object.hasOwn(input, id)) continue;
         const value = (input as Record<string, unknown>)[id];
-        if (typeof value === 'string' && vocabulary[id].includes(value)) result[id] = value;
+        if (typeof value === 'string' && vocabulary[id].includes(value)
+          && !(pieceId === 'marquee' && id === 'direction' && value !== 'left' && value !== 'right')) result[id] = value;
       } catch { /* One unreadable property does not discard other valid dials. */ }
     }
   } catch { /* Proxies and malformed external settings fail closed. */ }

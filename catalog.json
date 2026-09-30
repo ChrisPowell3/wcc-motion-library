@@ -1,6 +1,6 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "pieces": [
     {
       "id": "swipe-carousel",
@@ -154,7 +154,8 @@
         "cascade",
         "direction",
         "fade",
-        "start"
+        "start",
+        "blur"
       ]
     },
     {
@@ -192,14 +193,16 @@
           "description": "Pixels below rest; image default is 64. Clamped; non-finite values use the preset default."
         },
         "duration": {
-          "type": "string",
+          "type": "'fast' | 'base' | 'slow' | number",
           "default": "base",
           "options": [
             "fast",
             "base",
             "slow"
           ],
-          "description": "Maps to durations tokens (180/320/600ms). Image default is slow. Text/button translation uses settleEase derived from springs.settle; opacity and images use ease."
+          "min": 0,
+          "max": 5,
+          "description": "Named house duration, or seconds. Images default to slow. Numeric duration supports exact named-token presets."
         },
         "stagger": {
           "type": "number",
@@ -239,6 +242,29 @@
             "Object of supported dial ids with exact word values from SHARED_DIALS and PIECE_DIALS"
           ],
           "description": "Validated with cleanDials. Unknown ids/values and unsupported dials are ignored. Existing explicit props override dials; absent values retain piece defaults. See dials, dialDefaults and unsupportedDials. start early/middle/late uses 10/25/40% of viewport height, recalculated on resize; an explicit margin keeps native px/% semantics."
+        },
+        "blur": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10,
+          "description": "Entrance only; filter ends at none. Strong=10px, soft=6px. The image preset ignores blur for scroll triggers to keep large images sharp."
+        },
+        "delay": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 5000,
+          "description": "Milliseconds before entrance, in addition to sibling stagger."
+        },
+        "trigger": {
+          "type": "'scroll' | 'load'",
+          "default": "scroll",
+          "options": [
+            "scroll",
+            "load"
+          ],
+          "description": "Explicit trigger wins over start dial; load plays once per mount."
         }
       },
       "reducedMotion": "useReducedMotion plus a live system preference listener skip transform, opacity animation and delays entirely. All content renders at rest and fully opaque, including during a preference change. No prop overrides the preference. Server HTML is also fully visible.",
@@ -247,7 +273,8 @@
         "image": {
           "speed": "slow",
           "bounce": "none",
-          "fade": "full"
+          "fade": "full",
+          "blur": "none"
         }
       },
       "dials": [
@@ -259,7 +286,8 @@
         "cascade",
         "direction",
         "fade",
-        "start"
+        "start",
+        "blur"
       ],
       "dialDefaults": {
         "speed": "normal",
@@ -270,7 +298,8 @@
         "cascade": "cascade",
         "direction": "up",
         "fade": "soft",
-        "start": "early"
+        "start": "early",
+        "blur": "none"
       },
       "unsupportedDials": [
         "autoplay",
@@ -278,6 +307,1059 @@
         "sideCards",
         "flick"
       ]
+    },
+    {
+      "id": "scroll-focus",
+      "name": "Scroll Focus",
+      "export": "ScrollFocus",
+      "summary": "Text sharpens as it enters the screen and gently softens as it leaves.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "blur"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "blur": "soft"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Plain text only"
+          ],
+          "description": "Required. Images and interactive descendants are excluded.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "blur": {
+          "type": "number",
+          "default": 8,
+          "min": 0,
+          "max": 10,
+          "description": "Reference default is 8px when no blur dial is supplied; explicit soft selects 6px, strong 10px."
+        },
+        "distance": {
+          "type": "number",
+          "default": 14,
+          "min": 0,
+          "max": 60,
+          "description": ""
+        },
+        "startOpacity": {
+          "type": "number",
+          "default": 0.2,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": ""
+        },
+        "enter": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "description": "Viewport-height fraction for entry."
+        },
+        "exit": {
+          "type": "number",
+          "default": 0.22,
+          "min": 0.05,
+          "max": 1,
+          "description": "Viewport-height fraction for exit."
+        },
+        "exitFocus": {
+          "type": "number",
+          "default": 0.35,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "as": {
+          "type": "string",
+          "default": "span",
+          "options": [
+            "span",
+            "p",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/scroll-focus.html",
+      "dialDefaultNotes": {
+        "blur": "The unselected reference preset is 8px; selecting soft uses 6px, selecting strong uses 10px."
+      }
+    },
+    {
+      "id": "count-up",
+      "name": "Count Up",
+      "export": "CountUp",
+      "summary": "Numbers count smoothly to their final value while keeping their original formatting.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "delay",
+        "plays"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "delay": "short",
+        "plays": "once"
+      },
+      "unsupportedDials": [
+        "size",
+        "bounce",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "string | readonly string[]",
+          "default": null,
+          "options": [
+            "Authored number strings"
+          ],
+          "description": "Required; final strings are preserved exactly.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 2.2,
+          "min": 0,
+          "max": 10,
+          "description": "Seconds."
+        },
+        "delay": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "stagger": {
+          "type": "number",
+          "default": 0.18,
+          "min": 0,
+          "max": 1,
+          "description": "Seconds; sibling delay repeats every four items."
+        },
+        "once": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ],
+          "description": ""
+        },
+        "threshold": {
+          "type": "number",
+          "default": 0.12,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "margin": {
+          "type": "string",
+          "default": "0px 0px -6% 0px",
+          "options": [
+            "Valid IntersectionObserver root margin"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/count-up.html"
+    },
+    {
+      "id": "star-pop",
+      "name": "Star Pop",
+      "export": "StarPop",
+      "summary": "A row of small items pops into place with a playful turn and bounce.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "bounce",
+        "delay"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "bounce": "springy",
+        "delay": "short"
+      },
+      "unsupportedDials": [
+        "size",
+        "plays",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.6,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "delay": {
+          "type": "number",
+          "default": 0.25,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "stagger": {
+          "type": "number",
+          "default": 0.11,
+          "min": 0,
+          "max": 1,
+          "description": "Seconds."
+        },
+        "bounce": {
+          "type": "string",
+          "default": "springy",
+          "options": [
+            "none",
+            "soft",
+            "springy"
+          ],
+          "description": ""
+        },
+        "threshold": {
+          "type": "number",
+          "default": 0.25,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "margin": {
+          "type": "string",
+          "default": "0px",
+          "options": [
+            "Valid IntersectionObserver root margin"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/star-pop.html"
+    },
+    {
+      "id": "marquee",
+      "name": "Marquee",
+      "export": "Marquee",
+      "summary": "Content glides in a continuous strip that pauses when you interact with it.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "direction",
+        "size"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "direction": "left",
+        "size": "medium"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required strip content. Rendered interactive descendants automatically use one static, wrapped set so all controls remain actionable.",
+          "required": true
+        },
+        "duration": {
+          "type": "number",
+          "default": 30,
+          "min": 5,
+          "max": 120,
+          "description": "Seconds per seamless loop."
+        },
+        "gap": {
+          "type": "number",
+          "default": 28,
+          "min": 0,
+          "max": 120,
+          "description": "Pixels between items."
+        },
+        "direction": {
+          "type": "string",
+          "default": "left",
+          "options": [
+            "left",
+            "right"
+          ],
+          "description": ""
+        },
+        "label": {
+          "type": "string",
+          "default": "Moving content",
+          "options": [
+            "Accessible strip label"
+          ],
+          "description": ""
+        },
+        "showPauseControl": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/marquee.html",
+      "dialValues": {
+        "direction": [
+          "left",
+          "right"
+        ]
+      }
+    },
+    {
+      "id": "float",
+      "name": "Float",
+      "export": "Float",
+      "summary": "Small items drift gently up and down at slightly different rhythms.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "distance": {
+          "type": "number",
+          "default": 10,
+          "min": 0,
+          "max": 40,
+          "description": "Pixels."
+        },
+        "duration": {
+          "type": "number",
+          "default": 3.6,
+          "min": 0.2,
+          "max": 20,
+          "description": "Seconds per half cycle."
+        },
+        "durationStep": {
+          "type": "number",
+          "default": 0.7,
+          "min": 0,
+          "max": 3,
+          "description": "Seconds added per index modulo three."
+        },
+        "phase": {
+          "type": "number",
+          "default": 0.9,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds of advance per item."
+        },
+        "rotate": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 5,
+          "description": "Degrees of optional alternating sway; .6 gives the pill feel."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/float.html"
+    },
+    {
+      "id": "hover-tilt",
+      "name": "Hover Tilt",
+      "export": "HoverTilt",
+      "summary": "A card gently lifts and follows the pointer on devices with a precise cursor.",
+      "status": "beta",
+      "dials": [
+        "size",
+        "speed"
+      ],
+      "dialDefaults": {
+        "size": "medium",
+        "speed": "normal"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "maxTilt": {
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": 15,
+          "description": "Degrees."
+        },
+        "lift": {
+          "type": "number",
+          "default": 8,
+          "min": 0,
+          "max": 24,
+          "description": "Pixels."
+        },
+        "perspective": {
+          "type": "number",
+          "default": 1000,
+          "min": 400,
+          "max": 2000,
+          "description": "Pixels."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.1,
+          "min": 0.01,
+          "max": 1,
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/hover-tilt.html"
+    },
+    {
+      "id": "hover-lift",
+      "name": "Hover Lift",
+      "export": "HoverLift",
+      "summary": "A button or small item lifts slightly when a pointer rests on it.",
+      "status": "beta",
+      "dials": [
+        "size",
+        "speed"
+      ],
+      "dialDefaults": {
+        "size": "medium",
+        "speed": "normal"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "lift": {
+          "type": "number",
+          "default": 3,
+          "min": 0,
+          "max": 20,
+          "description": "Pixels."
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 3,
+          "description": "Seconds."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/hover-lift.html"
+    },
+    {
+      "id": "image-hover-zoom",
+      "name": "Image Hover Zoom",
+      "export": "ImageHoverZoom",
+      "summary": "An image gently zooms inside its frame when a pointer rests on it.",
+      "status": "beta",
+      "dials": [
+        "size",
+        "speed"
+      ],
+      "dialDefaults": {
+        "size": "medium",
+        "speed": "normal"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "scale": {
+          "type": "number",
+          "default": 1.03,
+          "min": 1,
+          "max": 1.2,
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 3,
+          "description": "Seconds."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/image-hover-zoom.html"
+    },
+    {
+      "id": "accordion",
+      "name": "Accordion",
+      "export": "Accordion",
+      "summary": "Questions open smoothly to reveal answers with clear keyboard controls.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "cascade"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "cascade": "cascade"
+      },
+      "unsupportedDials": [
+        "size",
+        "bounce",
+        "plays",
+        "delay",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "items": {
+          "type": "readonly AccordionItem[]",
+          "default": [],
+          "options": [
+            "Unique id, heading and content for each item"
+          ],
+          "description": "Required; stable unique ids.",
+          "required": true
+        },
+        "multiple": {
+          "type": "boolean",
+          "default": false,
+          "options": [
+            true,
+            false
+          ],
+          "description": "Overrides cascade; together permits many open, cascade permits one."
+        },
+        "defaultOpenIds": {
+          "type": "readonly string[]",
+          "default": [],
+          "options": [
+            "Ids initially open"
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 2,
+          "description": "Seconds."
+        },
+        "onChange": {
+          "type": "(ids: string[]) => void",
+          "default": null,
+          "options": [
+            "Callback receiving open ids"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/accordion.html"
+    },
+    {
+      "id": "cta-pills",
+      "name": "CTA Pills",
+      "export": "CtaPills",
+      "summary": "Small pill-shaped items rise into focus and then float gently in place.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "blur",
+        "delay"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "blur": "soft",
+        "delay": "short"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "options": [
+            "Any React content"
+          ],
+          "description": "Required content; semantic images must supply alt text.",
+          "required": true
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Any local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.9,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "delay": {
+          "type": "number",
+          "default": 0.2,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "stagger": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0,
+          "max": 1,
+          "description": "Seconds."
+        },
+        "distance": {
+          "type": "number",
+          "default": 16,
+          "min": 0,
+          "max": 64,
+          "description": ""
+        },
+        "scale": {
+          "type": "number",
+          "default": 0.9,
+          "min": 0.5,
+          "max": 1,
+          "description": ""
+        },
+        "blur": {
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": 10,
+          "description": ""
+        },
+        "bob": {
+          "type": "number",
+          "default": 4,
+          "min": 0,
+          "max": 20,
+          "description": ""
+        },
+        "floatDuration": {
+          "type": "number",
+          "default": 2.8,
+          "min": 0.2,
+          "max": 20,
+          "description": "Seconds."
+        },
+        "floatStep": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0,
+          "max": 3,
+          "description": "Seconds added per item."
+        },
+        "floatDelay": {
+          "type": "number",
+          "default": 1.2,
+          "min": 0,
+          "max": 10,
+          "description": "Seconds after reveal trigger."
+        },
+        "floatDelayStep": {
+          "type": "number",
+          "default": 0.3,
+          "min": 0,
+          "max": 3,
+          "description": "Seconds added per item."
+        },
+        "threshold": {
+          "type": "number",
+          "default": 0.25,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "margin": {
+          "type": "string",
+          "default": "0px",
+          "options": [
+            "Valid IntersectionObserver root margin"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Known word values for supported dial ids"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "demo": "demo/cta-pills.html"
     }
   ]
 }

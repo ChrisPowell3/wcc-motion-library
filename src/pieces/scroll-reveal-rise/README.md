@@ -40,7 +40,10 @@ outline. Focusing any descendant cancels that item's delay and reveals it at onc
 | `dials` | `{}` | Shared word settings listed below; unsupported/invalid entries are ignored |
 | `as` | `block` | `block`, `image`, `button` |
 | `distance` | 24; image: 64 | 8–120 px |
-| `duration` | `base`; image: `slow` | `fast`, `base`, `slow` |
+| `duration` | `base`; image: `slow` | `fast`, `base`, `slow`, or 0–5 seconds |
+| `delay` |0|0–5000ms before the entrance |
+| `blur` |0|0–10px, entrance only |
+| `trigger` |`scroll`|`scroll` or `load`; overrides the start dial |
 | `stagger` | 90 | 0–300 ms between siblings |
 | `startOpacity` | 0.5; image: 0 | 0–0.6 |
 | `once` | true | true or false |
@@ -70,9 +73,10 @@ Set `dials` for word-based controls. Omitting it keeps the existing preset;
 | `cascade` | `together`: no sibling stagger; `cascade`: 90 ms between siblings | `cascade` |
 | `direction` | `up`: starts below; `down`: above; `left`: to the left; `right`: to the right | `up` |
 | `fade` | `none`: fully opaque; `soft`: starts at 0.5; `full`: starts at 0 | `soft`; image: `full` |
-| `start` | `early`: bottom inset 10% of viewport height; `middle`: 25%; `late`: 40% | `early` |
+| `start` | `early`: bottom inset 10% of viewport height; `middle`: 25%; `late`: 40%; `load`: play on mount | `early` |
+| `blur` | `none`:0px; `soft`:6px; `strong`:10px | `none` |
 
-Explicit `distance`, `duration`, `stagger`, `startOpacity`, `once` and `margin`
+Explicit `blur`, `delay`, `trigger`, `distance`, `duration`, `stagger`, `startOpacity`, `once` and `margin`
 override their matching dials, including zero and false. Numeric props keep their
 existing clamps; non-finite values use the resolved dial or preset default.
 `fade: 'none'` stays fully opaque; an explicit `startOpacity` still clamps to 0–0.6.
@@ -80,8 +84,8 @@ Size resolves to 12/24/48 px for blocks and buttons, and 32/64/120 px for images
 
 Each item must intersect independently before its delay starts. The sibling
 portion of the delay is capped at nine beats and `durations.entrance` (900 ms);
-the selected `delay` is added separately, so the total can reach 1500 ms.
-Already-visible content keeps a subtle entrance: distance at most 8 px, opacity
+the selected `delay` is added separately.
+Already-visible unblurred scroll content keeps a subtle entrance: distance at most 8 px, opacity
 at least 0.8, `durations.fast` and the house ease. Its sibling wait is capped at
 180 ms, but the selected delay still applies. Its observer uses the actual
 viewport (zero margin), including the bottom inset strip, so `start` affects
@@ -103,10 +107,27 @@ item instantly and the next entry reveals again; there is no animated exit.
 Changing props does not replay an already-revealed one-time item. Remount to replay.
 
 Server markup is fully visible, and hydration prepares the animation before paint.
-Reduced motion skips movement, fading and delays entirely, including when the OS
+Reduced motion skips movement, fading, blur and delays entirely, including when the OS
 preference changes during an entrance. There is no prop to override the preference.
 Horizontal entrances clip overflow at the stationary anchor so they cannot
 widen the page; vertical overflow and the anchor focus outline remain visible.
-Only transform and opacity animate; content is never inert or hidden from assistive
+Transform, opacity and optional entrance blur animate; content is never inert or hidden from assistive
 technology. The explicit image opacity default of 0 follows the prop contract;
 use `startOpacity={0.5}` when images should remain translucent before revealing.
+
+
+## Blur-rise
+
+Use `dials={{blur: 'strong', fade: 'full', bounce: 'none'}}` with `distance={16}`,
+`duration={1.1}` and `stagger={70}` for the reference scroll entrance. For a hero,
+add `start: 'load'`, `delay={350}` and `stagger={110}`. These durations/offsets have
+named presets in `batchMotion.blurRise`; see the root README for token-based code.
+Blurred and page-load entrances use their full configured timing even above the
+fold. They finish with `filter: none`, and focus clears the blur immediately.
+`load` plays once on mount without an IntersectionObserver; `plays: 'always'`
+only repeats scroll-triggered entrances. Blur is never a continuous image-scroll
+animation. Reduced motion bypasses all of these effects.
+
+The `as="image"` scroll preset always stays sharp, including when a blur dial or
+prop is supplied. This enforces the rule against blurring large images on scroll.
+Use blurred scroll entrances for text and small blocks, not large images.

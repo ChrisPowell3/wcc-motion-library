@@ -280,3 +280,43 @@ describe('ScrollRevealRise', () => {
     expect(Observer.all.every(observer => observer.targets.size === 0)).toBe(true);
   });
 });
+
+
+describe('blur-rise batch preset', () => {
+  it('uses the exact load timing without an observer and finishes with no filter', async () => {
+    render(<Reveal duration={1.1} delay={350} distance={16} stagger={110} dials={{start: 'load', blur: 'strong', fade: 'full', bounce: 'none'}}/>);
+    expect(Observer.all).toHaveLength(0);
+    await waitFor(() => expect(vi.mocked(animate).mock.calls[0]?.[2]).toMatchObject({duration: 1.1, delay: 0.35}));
+    await waitFor(() => expect(frame().style.filter).not.toBe('none'));
+    await waitFor(() => expect(frame().style.filter).toBe('none'), {timeout: 2500});
+    await finished();
+  });
+  it('explicit blur and trigger override word dials', async () => {
+    render(<Reveal blur={6} trigger="scroll" dials={{start: 'load', blur: 'strong'}}/>);
+    expect(Observer.all).toHaveLength(1);
+    await waitFor(() => expect(frame().style.filter).toBe('blur(6px)'));
+    act(() => screen.getByRole('button').focus());
+    await waitFor(() => expect(frame().style.filter).toBe('none'));
+  });
+  it('reduced motion leaves load and blur dials fully final', async () => {
+    preferences.reduced = true;
+    render(<Reveal dials={{start:'load',blur:'strong',fade:'full'}}/>);
+    expect(animate).not.toHaveBeenCalled();
+    await finished();
+    expect(frame().style.filter).toBe('none');
+  });
+});
+
+
+it('keeps the large image preset sharp on scroll even with a blur dial', async () => {
+  render(<Reveal as="image" blur={10} dials={{blur:'strong'}}/>);
+  await waitFor(() => expect(frame().style.opacity).toBe('0'));
+  expect(frame().style.filter).toBe('none');
+});
+
+
+it('plays page-load entrances through StrictMode effect replay', async () => {
+  render(<StrictMode><Reveal duration={.2} delay={100} dials={{start:'load',blur:'strong',fade:'full'}}/></StrictMode>);
+  await waitFor(() => expect(frame().style.filter).toBe('blur(10px)'));
+  await waitFor(() => expect(frame().style.filter).toBe('none'), {timeout:1500});
+});
