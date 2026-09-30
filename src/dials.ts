@@ -12,7 +12,7 @@ export const SHARED_DIALS = Object.freeze({
   blur: Object.freeze(['none', 'soft', 'strong'] as const),
 });
 
-/** Additional dial ids used by specialized pieces; currently carousel-only. */
+/** Additional dial ids used by specialized pieces; shared by specialized pieces. */
 export const PIECE_DIALS = Object.freeze({
   autoplay: Object.freeze(['off', 'on'] as const),
   loop: Object.freeze(['off', 'on'] as const),
@@ -37,6 +37,13 @@ const support: Readonly<Record<string, readonly DialId[]>> = {
   'image-hover-zoom': ['size', 'speed'],
   'accordion': ['speed', 'cascade'],
   'cta-pills': ['speed', 'size', 'blur', 'delay'],
+  'image-load-blur-in': ['speed', 'size', 'blur', 'delay'],
+  'parallax-drift': ['speed', 'size', 'direction'],
+  'cursor-proximity-fade': ['size', 'delay'],
+  'fullscreen-viewer': ['speed', 'size', 'loop', 'fade'],
+  'pinned-scroll-story': ['speed', 'size', 'blur', 'fade'],
+  'scroll-stack-cards': ['speed', 'size'],
+  'cursor-follow-image': ['speed', 'size'],
 };
 
 /**
@@ -53,7 +60,8 @@ export function cleanDials(pieceId: string, input: unknown): MotionDials {
         if (!Object.hasOwn(input, id)) continue;
         const value = (input as Record<string, unknown>)[id];
         if (typeof value === 'string' && vocabulary[id].includes(value)
-          && !(pieceId === 'marquee' && id === 'direction' && value !== 'left' && value !== 'right')) result[id] = value;
+          && !(pieceId === 'marquee' && id === 'direction' && value !== 'left' && value !== 'right')
+          && !(pieceId === 'parallax-drift' && id === 'direction' && value !== 'up' && value !== 'down')) result[id] = value;
       } catch { /* One unreadable property does not discard other valid dials. */ }
     }
   } catch { /* Proxies and malformed external settings fail closed. */ }

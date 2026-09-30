@@ -13,6 +13,7 @@ quantity. A piece that feels cheap does not ship.
    Do not hard-code new spring or easing numbers inside a piece. If a
    piece truly needs a new feel, add a named token and explain why.
 4. Animate transform and opacity. Exception: a filter blur of 10px or less is allowed on entrances and on ScrollFocus text only, and must end at filter: none. Never blur large images on scroll.
+   The 2026-09-30 brief also permits PinnedScrollStory slide blur transitions (maximum 10px) and FullscreenViewer background scroll locking while open. Other pieces never lock page scrolling.
    Accordion may animate grid-template-rows between 0fr and 1fr, as explicitly authorized in the Motion Batch 1 brief.
 5. Reduced motion is required. When the viewer's device asks for reduced
    motion (`useReducedMotion` from `motion/react`), the piece must still

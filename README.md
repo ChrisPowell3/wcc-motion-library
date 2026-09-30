@@ -137,3 +137,42 @@ pieces require a fine hover-capable pointer. Observers are pooled, and continuou
 scroll/pointer following shares a requestAnimationFrame scheduler. ScrollFocus
 reads all positions before writing styles. No piece intercepts native scrolling.
 The sole layout-animation exception is Accordion's grid rows.
+
+
+## Load, pointer and scroll pieces (2026-09-30)
+
+Open `/design-2026-09-30.html` with `npm run demo` for the seven-piece showcase,
+or choose an individual page from the demo index. Each sample has its own dial
+panel. Reference files are studied locally and are excluded from the npm build.
+
+| Piece | Supported dials | Details |
+| --- | --- | --- |
+| ImageLoadBlurIn | speed, size, blur, delay | [Image load entrance](src/pieces/image-load-blur-in/README.md) |
+| ParallaxDrift | speed, size, direction | [Scroll drift](src/pieces/parallax-drift/README.md) |
+| CursorProximityFade | size, delay | [Optional proximity cue](src/pieces/cursor-proximity-fade/README.md) |
+| FullscreenViewer | speed, size, loop, fade | [Accessible fullscreen viewing](src/pieces/fullscreen-viewer/README.md) |
+| PinnedScrollStory | speed, size, blur, fade | [Native sticky story](src/pieces/pinned-scroll-story/README.md) |
+| ScrollStackCards | speed, size | [Stacking cards](src/pieces/scroll-stack-cards/README.md) |
+| CursorFollowImage | speed, size | [Pointer-following image](src/pieces/cursor-follow-image/README.md) |
+
+```tsx
+<ImageLoadBlurIn src="/landscape.jpg" alt="A mountain at sunrise" />
+<ParallaxDrift><img src="/detail.jpg" alt="Mountain detail" /></ParallaxDrift>
+<CursorProximityFade><a href="#next">Keep reading</a></CursorProximityFade>
+<FullscreenViewer items={galleryItems} dials={{loop:'on'}} />
+<PinnedScrollStory items={storyItems} />
+<ScrollStackCards>{cards}</ScrollStackCards>
+<CursorFollowImage><img src="/product.jpg" alt="Product detail" /></CursorFollowImage>
+```
+
+Parallax accepts only `up` or `down`, meaning travel direction; irrelevant dial
+values are dropped. FullscreenViewer uses the existing shared `loop` vocabulary.
+Explicit props override dials. The exact study timings are named in
+`designMotion` in `src/tokens.ts`.
+
+Server output stays readable: images are sharp, scroll effects are at rest, and
+stories/cards are in natural flow. Reduced motion keeps those final states and
+all controls working. FullscreenViewer locks background scrolling only while its
+native modal is open, then restores the previous styles and focus. The pinned
+story uses CSS sticky positioning and a scroll track; it does not intercept wheel
+or touch scrolling. Tall story panels and cards fall back to readable flow.
