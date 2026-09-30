@@ -1,4 +1,4 @@
-export {springs, durations, ease, flick, batchMotion, blurStrength} from './tokens';
+export {springs, durations, ease, flick, batchMotion, blurStrength, designMotion} from './tokens';
 export type {SpringName} from './tokens';
 // Each finished piece adds one export line here.
 export {SwipeCarousel, type SwipeCarouselProps, type SwipeCarouselItem, type SwipeCarouselCardState, type SwipeCarouselCardStyle} from './pieces/swipe-carousel/SwipeCarousel';
@@ -14,3 +14,10 @@ export {HoverLift, type HoverLiftProps} from './pieces/hover-lift/HoverLift';
 export {ImageHoverZoom, type ImageHoverZoomProps} from './pieces/image-hover-zoom/ImageHoverZoom';
 export {Accordion, type AccordionProps, type AccordionItem} from './pieces/accordion/Accordion';
 export {CtaPills, type CtaPillsProps} from './pieces/cta-pills/CtaPills';
+export {ImageLoadBlurIn, type ImageLoadBlurInProps} from './pieces/image-load-blur-in/ImageLoadBlurIn';
+export {ParallaxDrift, type ParallaxDriftProps} from './pieces/parallax-drift/ParallaxDrift';
+export {CursorProximityFade, type CursorProximityFadeProps} from './pieces/cursor-proximity-fade/CursorProximityFade';
+export {FullscreenViewer, type FullscreenViewerProps, type FullscreenViewerItem} from './pieces/fullscreen-viewer/FullscreenViewer';
+export {PinnedScrollStory, type PinnedScrollStoryProps, type PinnedScrollStoryItem} from './pieces/pinned-scroll-story/PinnedScrollStory';
+export {ScrollStackCards, type ScrollStackCardsProps} from './pieces/scroll-stack-cards/ScrollStackCards';
+export {CursorFollowImage, type CursorFollowImageProps} from './pieces/cursor-follow-image/CursorFollowImage';

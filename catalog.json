@@ -1360,6 +1360,806 @@
       },
       "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
       "demo": "demo/cta-pills.html"
+    },
+    {
+      "id": "image-load-blur-in",
+      "export": "ImageLoadBlurIn",
+      "name": "Image Load Blur-In",
+      "summary": "An image gently sharpens and settles to its normal size when it loads.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "blur",
+        "delay"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "blur": "soft",
+        "delay": "none"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "src": {
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [
+            "Image URL"
+          ]
+        },
+        "alt": {
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [
+            "Accessible description or empty string for a decorative background"
+          ]
+        },
+        "srcSet": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Responsive image source set"
+          ],
+          "description": ""
+        },
+        "sizes": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Responsive image sizes"
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 1.8,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "startScale": {
+          "type": "number",
+          "default": 1.05,
+          "min": 1,
+          "max": 1.2,
+          "description": ""
+        },
+        "blur": {
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": 10,
+          "description": "Pixels; entrance only, ends at filter:none."
+        },
+        "delay": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 5,
+          "description": "Seconds."
+        },
+        "aspectRatio": {
+          "type": "CSSProperties.aspectRatio",
+          "default": "16 / 9",
+          "options": [
+            "Valid CSS aspect ratio"
+          ],
+          "description": ""
+        },
+        "objectFit": {
+          "type": "string",
+          "default": "cover",
+          "options": [
+            "cover",
+            "contain"
+          ],
+          "description": ""
+        },
+        "objectPosition": {
+          "type": "string",
+          "default": "50% 50%",
+          "options": [
+            "Valid CSS object-position"
+          ],
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "demo": "demo/image-load-blur-in.html"
+    },
+    {
+      "id": "parallax-drift",
+      "export": "ParallaxDrift",
+      "name": "Parallax Drift",
+      "summary": "An image drifts gently with page scrolling to add a little depth.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "direction"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "direction": "down"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "required": true,
+          "options": [
+            "Semantic content with accessible labels and image alt text"
+          ]
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "distance": {
+          "type": "number",
+          "default": 70,
+          "min": 0,
+          "max": 300,
+          "description": "Maximum travel in pixels."
+        },
+        "factor": {
+          "type": "number",
+          "default": 0.08,
+          "min": 0,
+          "max": 1,
+          "description": "Travel per pixel of page scroll."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": "Follow factor per reference frame."
+        },
+        "direction": {
+          "type": "string",
+          "default": "down",
+          "options": [
+            "up",
+            "down"
+          ],
+          "description": "Continuous travel direction."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "demo": "demo/parallax-drift.html",
+      "dialValues": {
+        "direction": [
+          "up",
+          "down"
+        ]
+      }
+    },
+    {
+      "id": "cursor-proximity-fade",
+      "export": "CursorProximityFade",
+      "name": "Cursor Proximity Fade",
+      "summary": "A small cue appears when your pointer comes near or rests for a moment.",
+      "status": "beta",
+      "dials": [
+        "size",
+        "delay"
+      ],
+      "dialDefaults": {
+        "size": "medium",
+        "delay": "long"
+      },
+      "unsupportedDials": [
+        "speed",
+        "bounce",
+        "plays",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "required": true,
+          "options": [
+            "Semantic content with accessible labels and image alt text"
+          ]
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "radius": {
+          "type": "number",
+          "default": 260,
+          "min": 0,
+          "max": 2000,
+          "description": "Pointer proximity in pixels."
+        },
+        "idleDelay": {
+          "type": "number",
+          "default": 4.5,
+          "min": 0,
+          "max": 60,
+          "description": "Seconds of pointer inactivity before appearing."
+        },
+        "scrollLimit": {
+          "type": "number",
+          "default": 60,
+          "min": 0,
+          "max": 2000,
+          "description": "Hide at this page scroll offset; keyboard focus and reduced motion stay visible."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "demo": "demo/cursor-proximity-fade.html"
+    },
+    {
+      "id": "fullscreen-viewer",
+      "export": "FullscreenViewer",
+      "name": "Fullscreen Viewer",
+      "summary": "Open any item in a full-screen viewer and browse with buttons, dots or your keyboard.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "loop",
+        "fade"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "loop": "on",
+        "fade": "full"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "start",
+        "blur",
+        "autoplay",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "items": {
+          "type": "readonly FullscreenViewerItem[]",
+          "default": [],
+          "required": true,
+          "options": [
+            "Unique id, label, thumbnail ReactNode and content ReactNode"
+          ]
+        },
+        "loop": {
+          "type": "boolean",
+          "default": true,
+          "options": [
+            true,
+            false
+          ],
+          "description": ""
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.6,
+          "min": 0,
+          "max": 3,
+          "description": "Content entrance seconds."
+        },
+        "overlayDuration": {
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "max": 3,
+          "description": "Overlay entrance seconds."
+        },
+        "distance": {
+          "type": "number",
+          "default": 24,
+          "min": 0,
+          "max": 120,
+          "description": "Entrance travel in pixels."
+        },
+        "startScale": {
+          "type": "number",
+          "default": 0.97,
+          "min": 0.8,
+          "max": 1,
+          "description": ""
+        },
+        "fade": {
+          "type": "string",
+          "default": "full",
+          "options": [
+            "none",
+            "soft",
+            "full"
+          ],
+          "description": ""
+        },
+        "ariaLabel": {
+          "type": "string",
+          "default": "Fullscreen viewer",
+          "options": [
+            "Accessible dialog name"
+          ],
+          "description": ""
+        },
+        "maxWidth": {
+          "type": "number",
+          "default": 1100,
+          "min": 280,
+          "max": 1920,
+          "description": "Viewer content maximum width in pixels."
+        },
+        "gap": {
+          "type": "number",
+          "default": 16,
+          "min": 0,
+          "max": 80,
+          "description": "Thumbnail grid gap in pixels."
+        },
+        "swipeThreshold": {
+          "type": "number",
+          "default": 48,
+          "min": 16,
+          "max": 200,
+          "description": "Horizontal gesture threshold in pixels."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Instant modal opening and navigation with no transform or fade. Background scroll locks only while the modal is open and is restored on close.",
+      "demo": "demo/fullscreen-viewer.html"
+    },
+    {
+      "id": "pinned-scroll-story",
+      "export": "PinnedScrollStory",
+      "name": "Pinned Scroll Story",
+      "summary": "Scroll through a sequence of scenes that ends with an overview of every item.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size",
+        "blur",
+        "fade"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium",
+        "blur": "strong",
+        "fade": "full"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "start",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "items": {
+          "type": "readonly PinnedScrollStoryItem[]",
+          "default": [],
+          "required": true,
+          "options": [
+            "Unique id, label, content ReactNode and optional thumbnail ReactNode"
+          ]
+        },
+        "overviewLabel": {
+          "type": "string",
+          "default": "At a glance",
+          "options": [
+            "Overview heading"
+          ],
+          "description": ""
+        },
+        "ariaLabel": {
+          "type": "string",
+          "default": "Scroll story",
+          "options": [
+            "Accessible story label"
+          ],
+          "description": ""
+        },
+        "trackPerSlide": {
+          "type": "number",
+          "default": 0.6,
+          "min": 0.2,
+          "max": 2,
+          "description": "Viewport heights of native scroll per panel, including overview."
+        },
+        "top": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 240,
+          "description": "Sticky top offset in pixels."
+        },
+        "duration": {
+          "type": "number",
+          "default": 0.9,
+          "min": 0,
+          "max": 3,
+          "description": "Slide transition seconds."
+        },
+        "distance": {
+          "type": "number",
+          "default": 40,
+          "min": 0,
+          "max": 120,
+          "description": "Slide transition travel in pixels."
+        },
+        "blur": {
+          "type": "number",
+          "default": 10,
+          "min": 0,
+          "max": 10,
+          "description": "Slide content blur; media panels stay sharp."
+        },
+        "startOpacity": {
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "All panels and the overview remain in natural flow with no pinning, motion or blur; navigation stays usable.",
+      "demo": "demo/pinned-scroll-story.html"
+    },
+    {
+      "id": "scroll-stack-cards",
+      "export": "ScrollStackCards",
+      "name": "Scroll Stacking Cards",
+      "summary": "Cards stack as you scroll, with each previous card gently shrinking behind the next.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "required": true,
+          "options": [
+            "Semantic content with accessible labels and image alt text"
+          ]
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "scale": {
+          "type": "number",
+          "default": 0.95,
+          "min": 0.8,
+          "max": 1,
+          "description": "Outgoing card scale at full overlap."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": ""
+        },
+        "top": {
+          "type": "number",
+          "default": 96,
+          "min": 0,
+          "max": 300,
+          "description": "Sticky top in pixels."
+        },
+        "gap": {
+          "type": "number",
+          "default": 24,
+          "min": 0,
+          "max": 160,
+          "description": "Static spacing between cards in pixels."
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "demo": "demo/scroll-stack-cards.html"
+    },
+    {
+      "id": "cursor-follow-image",
+      "export": "CursorFollowImage",
+      "name": "Cursor Follow Image",
+      "summary": "An image follows your pointer slightly and settles back when you leave.",
+      "status": "beta",
+      "dials": [
+        "speed",
+        "size"
+      ],
+      "dialDefaults": {
+        "speed": "normal",
+        "size": "medium"
+      },
+      "unsupportedDials": [
+        "bounce",
+        "plays",
+        "delay",
+        "cascade",
+        "direction",
+        "fade",
+        "start",
+        "blur",
+        "autoplay",
+        "loop",
+        "sideCards",
+        "flick"
+      ],
+      "settings": {
+        "children": {
+          "type": "ReactNode",
+          "default": null,
+          "required": true,
+          "options": [
+            "Semantic content with accessible labels and image alt text"
+          ]
+        },
+        "className": {
+          "type": "string",
+          "default": null,
+          "options": [
+            "Local class name"
+          ],
+          "description": ""
+        },
+        "style": {
+          "type": "CSSProperties",
+          "default": null,
+          "options": [
+            "Static wrapper styles"
+          ],
+          "description": ""
+        },
+        "maxX": {
+          "type": "number",
+          "default": 26,
+          "min": 0,
+          "max": 100,
+          "description": "Maximum horizontal pull in pixels."
+        },
+        "maxY": {
+          "type": "number",
+          "default": 22,
+          "min": 0,
+          "max": 100,
+          "description": "Maximum vertical pull in pixels."
+        },
+        "scale": {
+          "type": "number",
+          "default": 1.03,
+          "min": 1,
+          "max": 1.2,
+          "description": ""
+        },
+        "falloff": {
+          "type": "number",
+          "default": 420,
+          "min": 1,
+          "max": 2000,
+          "description": "Distance in pixels before pull strength falls off."
+        },
+        "strength": {
+          "type": "number",
+          "default": 0.06,
+          "min": 0,
+          "max": 1,
+          "description": ""
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.08,
+          "min": 0.01,
+          "max": 1,
+          "description": ""
+        },
+        "dials": {
+          "type": "MotionDials",
+          "default": {},
+          "options": [
+            "Supported word settings"
+          ],
+          "description": "Explicit props win; reduced motion always wins."
+        }
+      },
+      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "demo": "demo/cursor-follow-image.html"
     }
   ]
 }

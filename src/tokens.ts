@@ -57,3 +57,14 @@ export const batchMotion = {
   marquee: {duration: 30, gap: 28, ease: 'linear' as const},
   pills: {duration: .9, delay: .2, stagger: .14, ease: [.34, 1.4, .64, 1] as const, floatDuration: 2.8, floatStep: .4, floatDelay: 1.2, floatDelayStep: .3, distance: 16, scale: .9, blur: 6, bob: 4},
 } as const;
+
+// Owned 2026 design study: load, pointer, dialog and scroll choreography.
+export const designMotion = {
+  imageLoad: {duration: 1.8, scale: 1.05, blur: 6},
+  parallax: {distance: 70, factor: .08, smoothing: .14},
+  proximity: {radius: 260, idle: 4.5, scrollLimit: 60},
+  viewer: {overlayDuration: .5, duration: .6, distance: 24, scale: .97},
+  story: {duration: .9, distance: 40, blur: 10, trackPerSlide: .6},
+  stack: {scale: .95, smoothing: .14, top: 96, gap: 24},
+  cursorFollow: {maxX: 26, maxY: 22, scale: 1.03, falloff: 420, strength: .06, smoothing: .08},
+} as const;
