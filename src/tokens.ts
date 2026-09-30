@@ -40,3 +40,20 @@ export const autoplayTiming = {interval: durations.entrance * 5} as const;
 export const flick = {power: 0.18, maxItems: 4} as const;
 
 export type SpringName = keyof typeof springs;
+
+// Reference-derived house motion. These named tokens retain the owned design's
+// exact cadence while keeping every piece generic and independently adjustable.
+export const blurStrength = {none: 0, soft: 6, strong: 10} as const;
+export const batchMotion = {
+  frameMs: 1000 / 60,
+  idleEase: [0.42, 0, 0.58, 1] as const,
+  blurRise: {duration: 1.1, stagger: .07, heroStagger: .11, heroDelay: .35, distance: 16},
+  focus: {blur: 8, distance: 14, opacity: .2, enter: .4, exit: .22, exitFocus: .35, smoothing: .14},
+  count: {duration: 2.2, delay: .5, stagger: .18, group: 4, ease: (progress: number) => progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)},
+  star: {duration: .6, delay: .25, stagger: .11, peak: .6, ease: [.34, 1.56, .64, 1] as const},
+  float: {duration: 3.6, durationStep: .7, phase: .9, distance: 10, rotation: .6},
+  hover: {duration: .5, zoomDuration: 1, smoothing: .1, perspective: 1000, tilt: 6, lift: 8, buttonLift: 3, zoom: 1.03},
+  accordion: {duration: .5, iconDuration: .45, opacityDuration: .4, opacityEase: 'ease' as const, ease: [.16, 1, .3, 1] as const},
+  marquee: {duration: 30, gap: 28, ease: 'linear' as const},
+  pills: {duration: .9, delay: .2, stagger: .14, ease: [.34, 1.4, .64, 1] as const, floatDuration: 2.8, floatStep: .4, floatDelay: 1.2, floatDelayStep: .3, distance: 16, scale: .9, blur: 6, bob: 4},
+} as const;

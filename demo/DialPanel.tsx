@@ -3,10 +3,10 @@ import {SHARED_DIALS, PIECE_DIALS, type DialId, type MotionDials} from '../src';
 import catalog from '../catalog.json';
 
 const vocabulary = {...SHARED_DIALS, ...PIECE_DIALS};
-const labels: Record<DialId, string> = {speed: 'Speed', size: 'Size', bounce: 'Bounce', plays: 'Plays', delay: 'Delay', cascade: 'Cascade', direction: 'Direction', fade: 'Fade', start: 'Start', autoplay: 'Autoplay', loop: 'Loop', sideCards: 'Side cards', flick: 'Flick'};
+const labels: Record<DialId, string> = {speed: 'Speed', size: 'Size', bounce: 'Bounce', plays: 'Plays', delay: 'Delay', cascade: 'Cascade', direction: 'Direction', fade: 'Fade', start: 'Start', autoplay: 'Autoplay', loop: 'Loop', sideCards: 'Side cards', flick: 'Flick', blur: 'Blur'};
 
 export function DialPanel({pieceId, value, onChange, onReplay}: {
-  pieceId: 'scroll-reveal-rise' | 'swipe-carousel';
+  pieceId: string;
   value: MotionDials;
   onChange: (value: MotionDials) => void;
   onReplay: () => void;
@@ -27,8 +27,8 @@ export function DialPanel({pieceId, value, onChange, onReplay}: {
             else delete next[dial];
             onChange(next);
           }} style={{minWidth: 0, width: '100%', minHeight: 44, padding: '8px 6px', border: '1px solid #879c91', borderRadius: 6, color: 'inherit', background: '#fff', font: 'inherit'}}>
-            <option value="">Default ({defaults[dial]})</option>
-            {vocabulary[dial].map(word => <option value={word} key={word}>{word}</option>)}
+            <option value="">Default ({'dialDefaultNotes' in piece && (piece.dialDefaultNotes as Record<string,string> | undefined)?.[dial] ? 'reference preset' : defaults[dial]})</option>
+            {(('dialValues' in piece ? (piece.dialValues as Partial<Record<DialId, readonly string[]>>)?.[dial] : undefined) ?? vocabulary[dial]).map(word => <option value={word} key={word}>{word}</option>)}
           </select>
         </div>;
       })}

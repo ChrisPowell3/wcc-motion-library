@@ -8,7 +8,7 @@ they take, so CP can say "use the swipe carousel here" on any site.
 - Rules for builders live in `AGENTS.md`.
 - Run `npm run check` to test and `npm run demo` to see pieces.
 
-## Motion dials (0.3.0)
+## Motion dials (0.4.0)
 
 Every piece accepts the same `dials` shape. The Website Command Center can send
 words without knowing distances, durations or spring physics:
@@ -42,7 +42,8 @@ The validator does not fill defaults. Each piece owns its mappings.
 | cascade | together / cascade | Yes | Unsupported |
 | direction | up / down / left / right | Yes | Unsupported |
 | fade | none / soft / full | Yes | Unsupported |
-| start | early / middle / late | Yes | Unsupported |
+| start | early / middle / late / load | Yes | Unsupported |
+| blur | none / soft / strong | Yes | Unsupported |
 | autoplay | off / on | Unsupported | Yes |
 | loop | off / on | Unsupported | Yes |
 | sideCards | normal / smaller / dimmer | Unsupported | Yes |
@@ -61,9 +62,78 @@ pieces must register their support in `src/dials.ts`, implement their own token
 mappings, and declare all defaults and unsupported ids in the catalog. New dial
 ids belong in the central vocabulary, never in a piece-local vocabulary.
 
-Both demo pages include a dial panel with reset and replay controls. Initially
+All demo pages include a dial panel with reset and replay controls. Initially
 visible reveal content retains its short, subtle entrance; scroll to below-fold
 samples to compare full distance, speed, bounce and trigger settings. The sample
 labeled optional replay retains its explicit `once={false}` to demonstrate prop
 priority. Carousel autoplay can also be paused using its visible button; pointer,
 focus, tab visibility and reduced-motion preferences take priority over playback.
+
+
+## Motion Batch 1
+
+The generic pieces below use the timing studied in our own design reference.
+All timings and curves are named in `src/tokens.ts`; no reference code or assets
+are shipped. Run `npm run demo`, then open `/motion-batch-1.html` for the full
+showcase at phone or desktop widths. Each piece also has its own linked demo.
+
+| Piece | Supported dials | Usage and props |
+| --- | --- | --- |
+| ScrollFocus | speed, size, blur | [Text focus](src/pieces/scroll-focus/README.md) |
+| CountUp | speed, delay, plays | [Exact formatted numbers](src/pieces/count-up/README.md) |
+| StarPop | speed, bounce, delay | [Staggered small items](src/pieces/star-pop/README.md) |
+| Marquee | speed, direction, size | [Seamless strip](src/pieces/marquee/README.md) |
+| Float | speed, size | [Idle bob](src/pieces/float/README.md) |
+| HoverTilt | size, speed | [Pointer-following card](src/pieces/hover-tilt/README.md) |
+| HoverLift | size, speed | [Button lift](src/pieces/hover-lift/README.md) |
+| ImageHoverZoom | size, speed | [Clipped image zoom](src/pieces/image-hover-zoom/README.md) |
+| Accordion | speed, cascade | [Keyboard disclosures](src/pieces/accordion/README.md) |
+| CtaPills | speed, size, blur, delay | [Entrance and idle pills](src/pieces/cta-pills/README.md) |
+
+The WCC vocabulary above applies across pieces. Marquee accepts only `left` and
+`right` directions; `cleanDials` drops `up` and `down` for that piece. Its direction
+means travel direction. Accordion uses `cascade` for one open item and `together`
+for multiple open items. `start: 'load'` is supported by ScrollRevealRise and plays
+on mount. The blur dial uses 0/6/10px for none/soft/strong. ScrollFocus preserves the
+reference's 8px default when no blur dial is supplied; selecting soft explicitly
+uses 6px. The demo's Default option preserves that reference preset.
+
+## Blur-rise preset
+
+The word dials choose blur, opacity and smooth settling. Explicit props select
+the exact reference geometry and house timing. Scroll entrances use 70ms sibling
+stagger; the hero plays on load with 110ms stagger after 350ms.
+
+```tsx
+import {ScrollRevealRise, batchMotion} from '@wcc/motion-library';
+
+const blurRise = {blur: 'strong', fade: 'full', bounce: 'none'} as const;
+<ScrollRevealRise
+  dials={blurRise}
+  distance={batchMotion.blurRise.distance}
+  duration={batchMotion.blurRise.duration}
+  stagger={batchMotion.blurRise.stagger * 1000}
+>{content}</ScrollRevealRise>
+
+<ScrollRevealRise
+  dials={{...blurRise, start: 'load'}}
+  distance={batchMotion.blurRise.distance}
+  duration={batchMotion.blurRise.duration}
+  stagger={batchMotion.blurRise.heroStagger * 1000}
+  delay={batchMotion.blurRise.heroDelay * 1000}
+>{heroContent}</ScrollRevealRise>
+```
+
+The preset uses a 1.1-second entrance and house ease `[0.22,1,0.36,1]`. Entrance blur
+ends at `filter: none`; it never runs as continuous image-scroll blur. Existing
+unblurred above-fold reveals keep their subtle short entrance. `trigger="scroll"`
+or `trigger="load"` overrides the start dial; numeric `duration` is in seconds,
+while reveal `delay` and `stagger` remain milliseconds.
+
+Server markup contains final, visible entrance content and final number strings.
+Accordion renders its chosen open/closed disclosure state. Reduced motion stops
+movement, blur, counting, marquee and idle loops; controls stay usable. Pointer
+pieces require a fine hover-capable pointer. Observers are pooled, and continuous
+scroll/pointer following shares a requestAnimationFrame scheduler. ScrollFocus
+reads all positions before writing styles. No piece intercepts native scrolling.
+The sole layout-animation exception is Accordion's grid rows.
