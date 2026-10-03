@@ -3,7 +3,7 @@ import {SHARED_DIALS, PIECE_DIALS, type DialId, type MotionDials} from '../src';
 import catalog from '../catalog.json';
 
 const vocabulary = {...SHARED_DIALS, ...PIECE_DIALS};
-const labels: Record<DialId, string> = {speed: 'Speed', size: 'Size', bounce: 'Bounce', plays: 'Plays', delay: 'Delay', cascade: 'Cascade', direction: 'Direction', fade: 'Fade', start: 'Start', autoplay: 'Autoplay', loop: 'Loop', sideCards: 'Side cards', flick: 'Flick', blur: 'Blur'};
+const labels: Record<DialId, string> = {speed: 'Speed', size: 'Size', bounce: 'Bounce', plays: 'Plays', delay: 'Delay', cascade: 'Cascade', direction: 'Direction', fade: 'Fade', start: 'Start', autoplay: 'Autoplay', loop: 'Loop', sideCards: 'Side cards', flick: 'Flick', blur: 'Blur', align: 'Align'};
 
 export function DialPanel({pieceId, value, onChange, onReplay}: {
   pieceId: string;

@@ -10,6 +10,7 @@ export const SHARED_DIALS = Object.freeze({
   fade: Object.freeze(['none', 'soft', 'full'] as const),
   start: Object.freeze(['early', 'middle', 'late', 'load'] as const),
   blur: Object.freeze(['none', 'soft', 'strong'] as const),
+  align: Object.freeze(['start', 'center'] as const),
 });
 
 /** Additional dial ids used by specialized pieces; shared by specialized pieces. */
@@ -27,7 +28,7 @@ export type MotionDials = Partial<Record<DialId, string>>;
 
 const vocabulary: Readonly<Record<DialId, readonly string[]>> = {...SHARED_DIALS, ...PIECE_DIALS};
 const support: Readonly<Record<string, readonly DialId[]>> = {
-  'scroll-reveal-rise': Object.keys(SHARED_DIALS) as (keyof typeof SHARED_DIALS)[],
+  'scroll-reveal-rise': ['speed', 'size', 'bounce', 'plays', 'delay', 'cascade', 'direction', 'fade', 'start', 'blur'],
   'swipe-carousel': ['speed', 'size', 'bounce', 'autoplay', 'loop', 'sideCards', 'flick'],
   'scroll-focus': ['speed', 'size', 'blur'],
   'count-up': ['speed', 'delay', 'plays'],
@@ -43,7 +44,7 @@ const support: Readonly<Record<string, readonly DialId[]>> = {
   'parallax-drift': ['plays', 'speed', 'size', 'direction'],
   'cursor-proximity-fade': ['size', 'delay'],
   'fullscreen-viewer': ['speed', 'size', 'loop', 'fade'],
-  'pinned-scroll-story': ['speed', 'size', 'blur', 'fade'],
+  'pinned-scroll-story': ['speed', 'size', 'blur', 'fade', 'align'],
   'scroll-stack-cards': ['plays', 'speed', 'size'],
   'cursor-follow-image': ['speed', 'size'],
 };

@@ -8,7 +8,7 @@ they take, so CP can say "use the swipe carousel here" on any site.
 - Rules for builders live in `AGENTS.md`.
 - Run `npm run check` to test and `npm run demo` to see pieces.
 
-## Motion dials (0.5.0)
+## Motion dials (0.5.1)
 
 Every piece accepts the same `dials` shape. The Website Command Center can send
 words without knowing distances, durations or spring physics:
@@ -44,6 +44,7 @@ The validator does not fill defaults. Each piece owns its mappings.
 | fade | none / soft / full | Yes | Unsupported |
 | start | early / middle / late / load | Yes | Unsupported |
 | blur | none / soft / strong | Yes | Unsupported |
+| align | start / center | Unsupported | Unsupported |
 | autoplay | off / on | Unsupported | Yes |
 | loop | off / on | Unsupported | Yes |
 | sideCards | normal / smaller / dimmer | Unsupported | Yes |
@@ -54,6 +55,10 @@ Existing explicit props take priority, including `false` and `0`. For example,
 carousel size dial. Omitting `plays` selects `scrub` for entrances. Image reveal presets keep their distance and fade defaults. Reduced motion overrides
 all dials: no entrance/navigation animation, fade transition or autoplay. Direct
 carousel dragging and instant keyboard navigation remain usable.
+
+`align` is a shared dial supported by PinnedScrollStory in 0.5.1. It defaults to
+`start` (24px top padding); `center` centers shorter panels within the compact
+stage. The explicit `align` prop takes priority over the dial. Other pieces ignore it.
 
 The catalog exposes `dials` (supported id array), `dialDefaults` (id-to-word map),
 `unsupportedDials`, and reveal `dialDefaultsByPreset` for image overrides. New
@@ -176,7 +181,7 @@ panel. Reference files are studied locally and are excluded from the npm build.
 | ParallaxDrift | speed, size, direction, plays | [Scroll drift](src/pieces/parallax-drift/README.md) |
 | CursorProximityFade | size, delay | [Optional proximity cue](src/pieces/cursor-proximity-fade/README.md) |
 | FullscreenViewer | speed, size, loop, fade | [Accessible fullscreen viewing](src/pieces/fullscreen-viewer/README.md) |
-| PinnedScrollStory | speed, size, blur, fade | [Native sticky story](src/pieces/pinned-scroll-story/README.md) |
+| PinnedScrollStory | speed, size, blur, fade, align | [Native sticky story](src/pieces/pinned-scroll-story/README.md) |
 | ScrollStackCards | speed, size, plays | [Stacking cards](src/pieces/scroll-stack-cards/README.md) |
 | CursorFollowImage | speed, size | [Pointer-following image](src/pieces/cursor-follow-image/README.md) |
 
@@ -189,6 +194,12 @@ panel. Reference files are studied locally and are excluded from the npm build.
 <ScrollStackCards>{cards}</ScrollStackCards>
 <CursorFollowImage><img src="/product.jpg" alt="Product detail" /></CursorFollowImage>
 ```
+
+PinnedScrollStory sizes its sticky stage to the tallest panel and navigation,
+capped by the available viewport height. The final overview uses its own compact
+footprint, so the track ends with its content and progress bar. Its [six-panel
+demo](demo/pinned-scroll-story.html) uses a responsive program layout with 560px
+desktop scenes. SSR, reduced motion, and content that cannot fit remain in flow.
 
 Parallax accepts only `up` or `down`, meaning travel direction; irrelevant dial
 values are dropped. FullscreenViewer uses the existing shared `loop` vocabulary.

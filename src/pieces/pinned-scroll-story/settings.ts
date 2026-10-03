@@ -1,6 +1,6 @@
 import {cleanDials, type MotionDials} from '../../dials';
 import {blurStrength, designMotion, durations} from '../../tokens';
-export interface PinnedScrollStorySettings {dials?: MotionDials; duration?: number; distance?: number; blur?: number; startOpacity?: number; trackPerSlide?: number; top?: number;}
+export interface PinnedScrollStorySettings {dials?: MotionDials; duration?: number; distance?: number; blur?: number; startOpacity?: number; trackPerSlide?: number; top?: number; align?: 'start' | 'center';}
 const bounded = (value: number | undefined, fallback: number, min: number, max: number) => typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 export function resolvePinnedScrollStory(props: PinnedScrollStorySettings) {
   const dials = cleanDials('pinned-scroll-story', props.dials);
@@ -12,6 +12,7 @@ export function resolvePinnedScrollStory(props: PinnedScrollStorySettings) {
     startOpacity: bounded(props.startOpacity, dials.fade === 'none' ? 1 : dials.fade === 'soft' ? .5 : 0, 0, 1),
     trackPerSlide: bounded(props.trackPerSlide, base.trackPerSlide, .2, 2),
     top: bounded(props.top, 0, 0, 240),
+    align: props.align === 'start' || props.align === 'center' ? props.align : dials.align === 'center' ? 'center' : 'start',
   };
 }
 /** The last index owns the final interval, including progress exactly one. */

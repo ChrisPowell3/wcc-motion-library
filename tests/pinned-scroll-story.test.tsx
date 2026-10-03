@@ -11,6 +11,7 @@ const items = [{id: 'one', label: 'First', content: <a href="#first">First conte
 const rect = (top: number, height: number) => ({top, bottom: top + height, left: 0, right: 400, width: 400, height, x: 0, y: top, toJSON() {}});
 let media: EventTarget & {matches: boolean};
 let tall = false;
+let contentHeights: number[] | undefined;
 let frames: Map<number, FrameRequestCallback>;
 let frameId = 0;
 function frame() {act(() => {const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback(100));});}
@@ -18,11 +19,12 @@ function scroll(top: number) {act(() => {viewport.callback?.(rect(top, 2800), 10
 beforeEach(() => {
   media = Object.assign(new EventTarget(), {matches: false});
   vi.stubGlobal('matchMedia', () => media); vi.stubGlobal('innerHeight', 1000);
-  vi.stubGlobal('scrollTo', vi.fn()); tall = false; frames = new Map();
+  vi.stubGlobal('scrollTo', vi.fn()); tall = false; contentHeights = undefined; frames = new Map();
   vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {frames.set(++frameId, callback); return frameId;});
   vi.stubGlobal('cancelAnimationFrame', (id: number) => frames.delete(id));
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
-    return rect(0, this.hasAttribute('data-story-content') ? (tall ? 1200 : 300) : this.tagName === 'NAV' ? 52 : 2800);
+    const index = ['First', 'Second', 'At a glance'].indexOf(this.parentElement?.getAttribute('aria-label') ?? '');
+    return rect(0, this.hasAttribute('data-story-content') ? (tall ? 1200 : contentHeights?.[index] ?? 300) : this.tagName === 'NAV' ? 52 : 2800);
   });
 });
 afterEach(() => {cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); viewport.callback = undefined;});
@@ -45,6 +47,65 @@ describe('PinnedScrollStory', () => {
     expect(resolvePinnedScrollStory({dials: {speed: 'fast', size: 'small', blur: 'none', fade: 'soft'}})).toMatchObject({duration: .50625, distance: 20, blur: 0, startOpacity: .5});
     expect(resolvePinnedScrollStory({duration: 0, distance: 0, blur: 6, startOpacity: 1, dials: {speed: 'slow', size: 'large', blur: 'none', fade: 'full'}})).toMatchObject({duration: 0, distance: 0, blur: 6, startOpacity: 1});
     expect(resolvePinnedScrollStory({duration: Infinity, distance: -10, blur: 99, trackPerSlide: 0, top: 1000})).toMatchObject({duration: .9, distance: 0, blur: 10, trackPerSlide: .2, top: 240});
+  });
+  it('defaults to start alignment and lets an explicit alignment override the shared dial', () => {
+    expect(resolvePinnedScrollStory({}).align).toBe('start');
+    expect(resolvePinnedScrollStory({dials: {align: 'center'}}).align).toBe('center');
+    expect(resolvePinnedScrollStory({align: 'start', dials: {align: 'center'}}).align).toBe('start');
+    expect(resolvePinnedScrollStory({align: 'center', dials: {align: 'start'}}).align).toBe('center');
+    expect(resolvePinnedScrollStory({dials: {align: 'bottom'}}).align).toBe('start');
+  });
+  it('fits the tallest panel without viewport centering and trims the overview tail without changing scroll travel', () => {
+    contentHeights = [560, 400, 280];
+    const view = render(<PinnedScrollStory items={items} top={100} duration={0}/>); frame();
+    const root = view.container.querySelector('section')!;
+    const stage = root.firstElementChild as HTMLElement;
+    const grid = stage.firstElementChild!.firstElementChild as HTMLElement;
+    expect(stage.style.height).toBe('631px'); // Tallest panel + 48 padding + 20 gap + 3 progress.
+    expect(stage.style.justifyContent).toBe('flex-start');
+    expect(root.style.height).toBe('2151px'); // 1800 travel + 351 overview footprint.
+    expect(stage.style.marginBottom).toBe('-280px'); // Keep the full sticky travel for taller scenes.
+    expect(grid.style.height).toBe('560px');
+    expect(screen.getByRole('group', {name: 'First'}).style.alignSelf).toBe('start');
+    scroll(-1700);
+    expect(stage.style.height).toBe('351px');
+    expect(stage.style.marginBottom).toBe('0px');
+    expect(grid.style.height).toBe('280px');
+    expect(grid.style.overflow).toBe('clip'); // A departing tall panel must not cover the following section.
+    expect(root.style.height).toBe('2151px');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100');
+    scroll(100);
+    expect(stage.style.height).toBe('631px');
+    expect(screen.getByRole('button', {name: 'Go to First'}).getAttribute('aria-current')).toBe('step');
+    scroll(-1700);
+    expect(stage.style.height).toBe('351px');
+    expect(screen.getByRole('button', {name: 'Go to At a glance'}).getAttribute('aria-current')).toBe('step');
+  });
+  it('centers shorter panels only when requested and reserves the side rail when it is taller', () => {
+    contentHeights = [80, 90, 100];
+    const view = render(<PinnedScrollStory items={items} align="center"/>); frame();
+    const stage = view.container.querySelector('section')!.firstElementChild as HTMLElement;
+    expect(stage.style.height).toBe('203px'); // Three 44px controls plus 71px chrome.
+    expect(screen.getByRole('group', {name: 'First'}).style.alignSelf).toBe('center');
+    scroll(-1800);
+    expect(stage.style.height).toBe('203px');
+  });
+  it('reserves enough travel for a tall scene to clear the following section on a short track', () => {
+    vi.stubGlobal('innerHeight', 900);
+    contentHeights = [700, 0, 100];
+    const view = render(<PinnedScrollStory items={[items[0]]} trackPerSlide={.2} duration={0}/>); frame();
+    const root = view.container.querySelector('section')!;
+    const stage = root.firstElementChild as HTMLElement;
+    expect(stage.style.height).toBe('771px');
+    expect(root.style.height).toBe('1371px'); // Two 600px intervals + 171px final stage.
+    scroll(-599);
+    expect(screen.getByRole('button', {name: 'Go to First'}).getAttribute('aria-current')).toBe('step');
+    expect(parseFloat(root.style.height) - 599).toBeGreaterThanOrEqual(parseFloat(stage.style.height));
+    vi.stubGlobal('scrollY', 600); scroll(-600);
+    expect(screen.getByRole('button', {name: 'Go to At a glance'}).getAttribute('aria-current')).toBe('step');
+    expect(stage.style.height).toBe('171px');
+    fireEvent.click(screen.getByRole('button', {name: 'Go to At a glance'}));
+    expect(window.scrollTo).toHaveBeenLastCalledWith({top: 900, behavior: 'smooth'});
   });
   it('enhances fitting content and updates active navigation and progress from native scroll', () => {
     const view = render(<PinnedScrollStory items={items} duration={0}/>); frame(); scroll(-900);
@@ -126,5 +187,20 @@ describe('PinnedScrollStory', () => {
     const many = Array.from({length: 24}, (_, i) => ({...items[0], id: String(i), label: `Step ${i}`}));
     const view = render(<PinnedScrollStory items={many}/>); frame();
     expect(view.container.querySelector('[data-story-mode]')?.getAttribute('data-story-mode')).toBe('flow');
+  });
+  it('keeps every panel in flow when the document ends too soon to finish the compact pin', () => {
+    const documentHeight = vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(2800);
+    const view = render(<PinnedScrollStory items={items}/>); frame();
+    expect(view.container.querySelector('[data-story-mode]')?.getAttribute('data-story-mode')).toBe('flow');
+    expect(screen.getByRole('link', {name: 'First content'})).toBeTruthy();
+    expect(screen.getByText('Second content')).toBeTruthy();
+    expect(screen.getByRole('heading', {name: 'At a glance'})).toBeTruthy();
+    documentHeight.mockReturnValue(4000); fireEvent(window, new Event('resize')); frame();
+    expect(view.container.querySelector('[data-story-mode]')?.getAttribute('data-story-mode')).toBe('pinned');
+  });
+  it.each([{top: 0, mode: 'flow'}, {top: 100, mode: 'pinned'}])('includes the sticky offset when checking room to finish: $top', ({top, mode}) => {
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(3400);
+    const view = render(<PinnedScrollStory items={items} top={top}/>); frame();
+    expect(view.container.querySelector('[data-story-mode]')?.getAttribute('data-story-mode')).toBe(mode);
   });
 });
