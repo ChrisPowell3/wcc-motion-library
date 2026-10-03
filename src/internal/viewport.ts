@@ -1,5 +1,6 @@
 import {subscribeFrame} from './frame';
-type Subscription = {element: Element; update: (rect: DOMRectReadOnly, viewportHeight: number, deltaMs: number) => boolean};
+type ViewportMetrics = {scrollY: number; scrollHeight: number; width: number};
+type Subscription = {element: Element; update: (rect: DOMRectReadOnly, viewportHeight: number, deltaMs: number, metrics: ViewportMetrics) => boolean};
 const subscribers = new Set<Subscription>();
 let stopFrame: (() => void) | undefined;
 function wake() {
@@ -8,8 +9,9 @@ function wake() {
     // Read phase completes before callbacks may write styles or motion values.
     const measurements = [...subscribers].map(subscription => ({subscription, rect: subscription.element.getBoundingClientRect()}));
     const height = window.innerHeight;
+    const metrics = {scrollY: window.scrollY, scrollHeight: document.documentElement.scrollHeight, width: window.innerWidth};
     let moving = false;
-    for (const {subscription, rect} of measurements) if (subscribers.has(subscription)) moving = subscription.update(rect, height, delta) || moving;
+    for (const {subscription, rect} of measurements) if (subscribers.has(subscription)) moving = subscription.update(rect, height, delta, metrics) || moving;
     if (!moving) stopFrame = undefined;
     return moving;
   });

@@ -33,10 +33,12 @@ export function DialPanel({pieceId, value, onChange, onReplay}: {
         </div>;
       })}
     </div>
+    {pieceId === 'image-load-blur-in' && <p>The image load stage plays once per source in every mode.</p>}
+    {pieceId === 'parallax-drift' && <p>Parallax stays linked to scrolling in every mode.</p>}
     <div style={{display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginTop: 18}}>
       <button type="button" onClick={onReplay} style={{minHeight: 44, padding: '10px 16px', borderRadius: 24, background: '#203c3b', color: '#fff', border: 0, font: 'inherit', fontSize: 13, cursor: 'pointer'}}>Replay samples</button>
       <button type="button" onClick={() => onChange({})} style={{minHeight: 44, padding: '10px 16px', borderRadius: 24, background: 'transparent', color: '#203c3b', border: '1px solid #879c91', font: 'inherit', fontSize: 13, cursor: 'pointer'}}>Reset dials</button>
-      <p style={{flex: '1 1 250px', margin: 0, fontSize: 13, lineHeight: 1.5}}>Changes apply to the samples below. Scroll to see full entrances. Your device’s reduced-motion preference always wins.</p>
+      <p style={{flex: '1 1 250px', margin: 0, fontSize: 13, lineHeight: 1.5}}>Changes apply to the samples below. Scrub is the entrance default: scroll down, up, then down again. Once and always use timed entrances. Your device’s reduced-motion preference always wins.</p>
     </div>
   </fieldset>;
 }

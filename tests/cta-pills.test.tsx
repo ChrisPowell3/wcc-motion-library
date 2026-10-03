@@ -1,7 +1,12 @@
 import {act, cleanup, render, screen, waitFor} from '@testing-library/react';
 import {renderToString} from 'react-dom/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {CtaPills, resolveCtaPillsSettings} from '../src/pieces/cta-pills/CtaPills';
+import {CtaPills as ActualCtaPills, resolveCtaPillsSettings} from '../src/pieces/cta-pills/CtaPills';
+// Retain coverage of the legacy timed path; plays.test.tsx exercises the house scrub default.
+function CtaPills(props: React.ComponentProps<typeof ActualCtaPills>) {
+  return <ActualCtaPills {...props} dials={{plays: 'once', ...props.dials}}/>;
+}
+
 const preference = vi.hoisted(() => ({reduced: false}));
 vi.mock('motion/react', async original => ({...await original<typeof import('motion/react')>(), useReducedMotion: () => preference.reduced}));
 const observers = new Set<{targets: Set<Element>; callback: IntersectionObserverCallback}>();

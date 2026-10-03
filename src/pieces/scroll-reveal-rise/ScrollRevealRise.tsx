@@ -6,9 +6,10 @@ import {durations, ease} from '../../tokens';
 import type {MotionDials} from '../../dials';
 import {useReducedMotionPreference} from '../../useReducedMotionPreference';
 import {resolveRevealDials} from './dials';
+import {observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
 import {styles} from './styles';
 
-export interface ScrollRevealRiseProps {
+export interface ScrollRevealRiseProps extends EntranceOptions {
   /** Shared word dials; see catalog for values. Explicit props override matching dials.
    * Initially visible content uses an 8px/fast entrance with opacity at least 0.8
    * and the actual viewport trigger. The selected delay still applies.
@@ -32,7 +33,7 @@ export interface ScrollRevealRiseProps {
   stagger?: number;
   /** Initial opacity, clamped to 0–0.6. Default: 0.5; image: 0. */
   startOpacity?: number;
-  /** Play once per mounted child. Default: true. */
+  /** Play once per mounted child. Default: undefined (scrub). */
   once?: boolean;
   /** IntersectionObserver root margin, px or %. Default: 0px 0px -10% 0px. */
   margin?: string;
@@ -44,7 +45,7 @@ type ItemProps = Omit<ReturnType<typeof resolveRevealDials>, 'stagger'> & {
   reduced: boolean;
 };
 
-function RevealItem({children, as, distance, duration, blur, trigger, startOpacity, once, margin, startInset, delay, siblingDelay, axis, offsetSign, bounceEase, reduced}: ItemProps) {
+function RevealItem({children, as, distance, duration, blur, trigger, startOpacity, once, margin, startInset, delay, siblingDelay, axis, offsetSign, bounceEase, plays, scrubRange, smoothing, reduced}: ItemProps) {
   const anchor = useRef<HTMLDivElement>(null);
   const shown = useRef(false);
   const focused = useRef(false);
@@ -73,6 +74,15 @@ function RevealItem({children, as, distance, duration, blur, trigger, startOpaci
     if (reduced || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || (once && shown.current)) {
       final();
       return stop;
+    }
+    if (plays === 'scrub' && trigger !== 'load') {
+      const release = observeEntranceScrub(element, progress => {
+        const p = focused.current ? 1 : progress;
+        offset.set(offsetSign * distance * (1 - p));
+        opacity.set(startOpacity + (1 - startOpacity) * p);
+        blurValue.set(blur * (1 - p));
+      }, {margin, startInset, scrubRange, smoothing});
+      return () => {release(); stop(); revealNow.current = () => {};};
     }
     if (trigger !== 'load' && typeof IntersectionObserver === 'undefined') {
       final();
@@ -155,7 +165,7 @@ function RevealItem({children, as, distance, duration, blur, trigger, startOpaci
       stop();
       revealNow.current = () => {};
     };
-  }, [distance, duration, blur, trigger, blurValue, startOpacity, once, margin, startInset, delay, siblingDelay, offsetSign, bounceEase, reduced, offset, opacity]);
+  }, [plays, scrubRange, smoothing, distance, duration, blur, trigger, blurValue, startOpacity, once, margin, startInset, delay, siblingDelay, offsetSign, bounceEase, reduced, offset, opacity]);
 
   return <div ref={anchor} style={{...styles.anchor, ...(axis === 'x' ? {overflowX: 'clip', overflowY: 'visible'} as const : {}), ...(as === 'button' ? styles.button : {}), ...(focusVisible ? styles.focus : {})}}
     onFocusCapture={event => {
@@ -173,7 +183,7 @@ function RevealItem({children, as, distance, duration, blur, trigger, startOpaci
   </div>;
 }
 
-/** Observes native scrolling without subscribing to scroll, wheel or touch. */
+/** Follows native scrolling through the shared passive viewport observer. */
 export function ScrollRevealRise({children, ...props}: ScrollRevealRiseProps) {
   const reduced = useReducedMotionPreference();
   const {stagger, ...settings} = resolveRevealDials(props);

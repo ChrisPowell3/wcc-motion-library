@@ -1,13 +1,14 @@
 'use client';
 
 import {Children, useLayoutEffect, useRef, type CSSProperties, type ReactNode} from 'react';
+import type {EntranceOptions} from '../../internal/entrance';
 import type {MotionDials} from '../../dials';
 import {batchMotion} from '../../tokens';
 import {observeViewport} from '../../internal/viewport';
 import {useReducedMotionPreference} from '../../useReducedMotionPreference';
 import {resolveScrollStackCards, stackProgress} from './settings';
 
-export interface ScrollStackCardsProps {
+export interface ScrollStackCardsProps extends Pick<EntranceOptions, 'plays' | 'once'> {
   /** Each direct child is one card. Supply the card's own appearance and content. */
   children: ReactNode;
   dials?: MotionDials;
@@ -26,7 +27,7 @@ export interface ScrollStackCardsProps {
 export function ScrollStackCards({children, className, style, ...props}: ScrollStackCardsProps) {
   const cards = Children.toArray(children);
   const anchors = useRef<Array<HTMLDivElement | null>>([]); const contents = useRef<Array<HTMLDivElement | null>>([]);
-  const reduced = useReducedMotionPreference(); const {scale, smoothing, top, gap} = resolveScrollStackCards(props);
+  const reduced = useReducedMotionPreference(); const {plays, scale, smoothing, top, gap} = resolveScrollStackCards(props);
   // React can rewrite an index-based z-index during keyed reorders without a
   // new focus event. Reapply the focus elevation after every committed layout.
   useLayoutEffect(() => {
@@ -41,7 +42,7 @@ export function ScrollStackCards({children, className, style, ...props}: ScrollS
     const layers = contents.current.slice(0, cards.length);
     wrappers.forEach((element, i) => {element.style.position = 'relative'; element.style.top = ''; if (layers[i]) layers[i]!.style.transform = 'none';});
     if (reduced || wrappers.length < 2) return;
-    const rects: DOMRectReadOnly[] = []; const progress = wrappers.map(() => 0);
+    const rects: DOMRectReadOnly[] = []; const progress = wrappers.map(() => 0); const peaks = wrappers.map(() => 0);
     let stops: Array<() => void> = []; let sticky = false;
     const connect = () => {
       stops.forEach(stop => stop());
@@ -57,7 +58,15 @@ export function ScrollStackCards({children, className, style, ...props}: ScrollS
         wrappers.forEach((element, index) => {
           element.style.position = fits ? 'sticky' : 'relative';
           element.style.top = fits ? `${top}px` : '';
-          const target = fits && index < wrappers.length - 1 ? stackProgress(rects[index].top, rects[index + 1].top, rects[index].height) : 0;
+          let target = fits && index < wrappers.length - 1 ? stackProgress(rects[index].top, rects[index + 1].top, rects[index].height) : 0;
+          if (plays !== 'scrub') {
+            const outside = rects[index].bottom <= 0 || rects[index].top >= viewportHeight;
+            if (!fits || (plays === 'always' && outside)) {
+              peaks[index] = 0; progress[index] = 0; target = 0;
+            } else {
+              peaks[index] = Math.max(peaks[index], target); target = peaks[index];
+            }
+          }
           progress[index] = !fits || Math.abs(target - progress[index]) < .0001 ? target : progress[index] + (target - progress[index]) * amount;
           const layer = layers[index];
           if (layer) layer.style.transform = progress[index] === 0 || scale === 1 ? 'none' : `scale(${Number((1 - (1 - scale) * progress[index]).toFixed(4))})`;
@@ -71,7 +80,7 @@ export function ScrollStackCards({children, className, style, ...props}: ScrollS
     const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(connect);
     wrappers.forEach(wrapper => observer?.observe(wrapper));
     return () => {observer?.disconnect(); stops.forEach(stop => stop());};
-  }, [reduced, scale, smoothing, top, gap, cards.length, identity]);
+  }, [plays, reduced, scale, smoothing, top, gap, cards.length, identity]);
   return <div className={className} style={{minWidth: 0, ...style, display: 'flex', flexDirection: 'column', gap}}>
     {cards.map((card, index) => <div key={typeof card === 'object' && card !== null && 'key' in card ? card.key : index}
       ref={node => {anchors.current[index] = node;}} data-stack-card={index}

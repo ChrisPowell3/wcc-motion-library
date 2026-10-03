@@ -27,3 +27,8 @@ The overlap target is `clamp(1 − (nextTop − currentTop) / currentHeight, 0, 
 Cards must supply their own background, spacing and appearance. Avoid overflow containers between this piece and the page if it should stick to the page viewport. Every card stays in document flow. If any card is taller than the available viewport below `top`, the whole group returns to normal flow so all content remains readable. Resizing, image loads, and other card-size changes are observed. A focused descendant temporarily raises its card above siblings, preserving access to its native controls.
 
 Reduced motion renders cards in normal flow without scale changes, including live preference updates. Server rendering starts as readable normal content. Empty and single-card collections do not subscribe to animation. All subscriptions and resize observers are released on unmount.
+
+
+### Playback (0.5.0)
+
+The default plays dial is scrub, so overlap reverses naturally. Set plays="once" to retain maximum overlap or plays="always" to reset outside view. Explicit once={true/false} takes priority over the plays prop and dial. Reduced motion stays in natural flow.

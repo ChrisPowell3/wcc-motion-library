@@ -1,3 +1,4 @@
+import {resolveEntrance} from '../../internal/entrance';
 import {cleanDials} from '../../dials';
 import {durations, ease, settleEase, springyEase, blurStrength} from '../../tokens';
 import type {ScrollRevealRiseProps} from './ScrollRevealRise';
@@ -27,7 +28,7 @@ export function resolveRevealDials(props: Omit<ScrollRevealRiseProps, 'children'
     stagger: clamp(props.stagger, dials.cascade === 'together' ? 0 : durations.fast * 1000 / 2, 0, 300),
     // Only an explicit opacity is clamped: the no-fade dial must remain opaque.
     startOpacity: clamp(props.startOpacity, opacity, 0, 0.6),
-    once: props.once ?? dials.plays !== 'always',
+    ...resolveEntrance(props, dials),
     margin: props.margin ?? '0px 0px -10% 0px',
     startInset,
     axis: dials.direction === 'left' || dials.direction === 'right' ? 'x' as const : 'y' as const,

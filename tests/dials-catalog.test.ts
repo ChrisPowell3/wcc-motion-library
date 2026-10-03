@@ -18,3 +18,12 @@ describe('command center dial catalog', () => {
     }
   });
 });
+
+it('sets the house scrub default on every supported entrance and declares every other piece unsupported', () => {
+  const entrances = new Set(['scroll-reveal-rise', 'count-up', 'star-pop', 'cta-pills', 'scroll-stack-cards', 'parallax-drift', 'image-load-blur-in']);
+  for (const raw of catalog.pieces) {
+    const piece = raw as unknown as CatalogDials;
+    if (entrances.has(piece.id)) expect(piece.dialDefaults.plays).toBe('scrub');
+    else expect(piece.unsupportedDials).toContain('plays');
+  }
+});

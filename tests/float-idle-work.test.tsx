@@ -16,7 +16,7 @@ beforeEach(() => {vi.stubGlobal('IntersectionObserver', class {targets = new Set
 afterEach(() => {cleanup(); observers.clear(); vi.restoreAllMocks();});
 describe('idle motion work suspension', () => {
   it.each(['float', 'pills'])('%s stops its animation driver offscreen and in hidden documents', async kind => {
-    render(kind === 'float' ? <Float duration={.3}><span>Idle</span></Float> : <CtaPills duration={.03} delay={0} floatDelay={0} floatDuration={.3}><span>Idle</span></CtaPills>);
+    render(kind === 'float' ? <Float duration={.3}><span>Idle</span></Float> : <CtaPills plays="once" duration={.03} delay={0} floatDelay={0} floatDuration={.3}><span>Idle</span></CtaPills>);
     const idle = screen.getByText('Idle').parentElement!;
     visibility(true); await waitFor(() => expect(idle.style.transform).toContain('translateY(-'));
     visibility(false); await wait(100);

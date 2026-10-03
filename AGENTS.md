@@ -33,6 +33,8 @@ quantity. A piece that feels cheap does not ship.
 
 11. Every piece MUST accept the shared dials (dials prop, cleanDials). A dial that makes no sense for the piece is listed as unsupported in catalog.json and ignored. New dials are added to src/dials.ts for all pieces, never per piece.
 
+12. Motion never plays once and locks. Every entrance animation moves when you scroll down, reverses when you scroll back up, and plays again when you scroll down again. The page never sits static. Default for every entrance piece is plays: scrub.
+
 ## Every piece must ship with
 - `src/pieces/<id>/` (component, styles as CSS module or inline tokens)
 - One export line in `src/index.ts`

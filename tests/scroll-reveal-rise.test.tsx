@@ -36,7 +36,7 @@ beforeEach(() => {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(2000));
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-const Reveal = (props: Partial<ScrollRevealRiseProps>) => <library.ScrollRevealRise {...props}>{props.children ?? <button>Continue</button>}</library.ScrollRevealRise>;
+const Reveal = (props: Partial<ScrollRevealRiseProps>) => <library.ScrollRevealRise {...props} dials={{plays: 'once', ...props.dials}}>{props.children ?? <button>Continue</button>}</library.ScrollRevealRise>;
 const frame = (name = 'Continue') => screen.getByText(name).parentElement!;
 const enter = (visible: boolean) => act(() => Observer.all.forEach(observer => observer.enter(visible)));
 const finished = async (name = 'Continue') => waitFor(() => {

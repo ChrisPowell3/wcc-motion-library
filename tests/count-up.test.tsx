@@ -1,7 +1,12 @@
 import {act, cleanup, render, screen, waitFor} from '@testing-library/react';
 import {renderToString} from 'react-dom/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {CountUp, countText, resolveCountUpSettings} from '../src/pieces/count-up/CountUp';
+import {CountUp as ActualCountUp, countText, resolveCountUpSettings} from '../src/pieces/count-up/CountUp';
+// Retain coverage of the legacy timed path; plays.test.tsx exercises the house scrub default.
+function CountUp(props: React.ComponentProps<typeof ActualCountUp>) {
+  return <ActualCountUp {...props} dials={{plays: 'once', ...props.dials}}/>;
+}
+
 const preference = vi.hoisted(() => ({reduced: false}));
 vi.mock('motion/react', async original => ({...await original<typeof import('motion/react')>(), useReducedMotion: () => preference.reduced}));
 const observers = new Set<{targets: Set<Element>; callback: IntersectionObserverCallback}>();
@@ -47,7 +52,7 @@ describe('CountUp', () => {
     visibility(false); expect(screen.getByRole('group').textContent).toBe('25+');
   });
   it('uses stagger groups and explicit timing overrides while ignoring unsupported dials', () => {
-    expect(resolveCountUpSettings({})).toMatchObject({duration: 2.2, delay: .5, stagger: .18, once: true});
+    expect(resolveCountUpSettings({})).toMatchObject({duration: 2.2, delay: .5, stagger: .18, once: false, plays: 'scrub'});
     expect(resolveCountUpSettings({dials: {speed: 'fast', delay: 'long', plays: 'always'}})).toMatchObject({duration: 1.2375, delay: 1.1, once: false});
     expect(resolveCountUpSettings({duration: 3, delay: 0, once: true, dials: {speed: 'fast', delay: 'long', plays: 'always', size: 'large'}})).toMatchObject({duration: 3, delay: 0, once: true});
   });

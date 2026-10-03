@@ -1,3 +1,4 @@
+import {resolveEntrance} from '../../internal/entrance';
 import {cleanDials} from '../../dials';
 import {designMotion} from '../../tokens';
 import {clampNumber, dialSmoothing} from '../hover-tilt/behavior';
@@ -6,6 +7,7 @@ export function resolveScrollStackCards(props: Omit<ScrollStackCardsProps, 'chil
   const dials = cleanDials('scroll-stack-cards', props.dials); const base = designMotion.stack;
   const size = dials.size === 'small' ? .5 : dials.size === 'large' ? 1.5 : 1;
   return {
+    plays: resolveEntrance(props, dials).plays,
     scale: clampNumber(props.scale, 1 - (1 - base.scale) * size, .8, 1),
     smoothing: clampNumber(props.smoothing, dialSmoothing(base.smoothing, dials.speed), .01, 1),
     top: clampNumber(props.top, base.top, 0, 300),

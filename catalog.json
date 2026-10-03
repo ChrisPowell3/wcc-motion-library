@@ -1,6 +1,6 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "pieces": [
     {
       "id": "swipe-carousel",
@@ -163,7 +163,7 @@
       "name": "Scroll Reveal Rise",
       "export": "ScrollRevealRise",
       "summary": "Content gently rises up and fades in as you scroll down to it, with images taking a touch longer and any group of items following one another in a quick cascade.",
-      "status": "ready",
+      "status": "beta",
       "settings": {
         "children": {
           "type": "ReactNode | ReactNode[]",
@@ -220,12 +220,13 @@
         },
         "once": {
           "type": "boolean",
-          "default": true,
+          "default": null,
           "options": [
             true,
-            false
+            false,
+            "undefined"
           ],
-          "description": "One entrance per mounted keyed child. false instantly resets outside view for replay; focused content remains visible. Remount to restart a one-time reveal."
+          "description": "Legacy override: true selects once, false selects always. Omit for the scrub default. Takes priority over plays prop and dial."
         },
         "margin": {
           "type": "string",
@@ -265,9 +266,33 @@
             "load"
           ],
           "description": "Explicit trigger wins over start dial; load plays once per mount."
+        },
+        "plays": {
+          "type": "Plays",
+          "default": "scrub",
+          "options": [
+            "once",
+            "always",
+            "scrub"
+          ],
+          "description": "Scrub follows native scroll in both directions. Always resets outside view. Once retains progress. Explicit once takes priority."
+        },
+        "scrubRange": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "description": "Viewport fraction from the trigger line to full progress. Native margin and threshold (or reveal start dial) set the trigger. Time delay, stagger, duration and bounce apply to timed modes only. Near the document end the range shifts earlier so the final state is reachable. Non-scrolling pages stay visible."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": "Following factor per reference frame, using the ScrollFocus house feel. 1 follows immediately."
         }
       },
-      "reducedMotion": "useReducedMotion plus a live system preference listener skip transform, opacity animation and delays entirely. All content renders at rest and fully opaque, including during a preference change. No prop overrides the preference. Server HTML is also fully visible.",
+      "reducedMotion": "Fully visible and still; no scrub, replay, springs, or parallax.",
       "demo": "demo/scroll-reveal-rise.html",
       "dialDefaultsByPreset": {
         "image": {
@@ -293,7 +318,7 @@
         "speed": "normal",
         "size": "medium",
         "bounce": "soft",
-        "plays": "once",
+        "plays": "scrub",
         "delay": "none",
         "cascade": "cascade",
         "direction": "up",
@@ -456,7 +481,7 @@
       "dialDefaults": {
         "speed": "normal",
         "delay": "short",
-        "plays": "once"
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "size",
@@ -520,12 +545,13 @@
         },
         "once": {
           "type": "boolean",
-          "default": true,
+          "default": null,
           "options": [
             true,
-            false
+            false,
+            "undefined"
           ],
-          "description": ""
+          "description": "Legacy override: true selects once, false selects always. Omit for the scrub default. Takes priority over plays prop and dial."
         },
         "threshold": {
           "type": "number",
@@ -549,9 +575,33 @@
             "Known word values for supported dial ids"
           ],
           "description": "Explicit props win; reduced motion always wins."
+        },
+        "plays": {
+          "type": "Plays",
+          "default": "scrub",
+          "options": [
+            "once",
+            "always",
+            "scrub"
+          ],
+          "description": "Scrub follows native scroll in both directions. Always resets outside view. Once retains progress. Explicit once takes priority."
+        },
+        "scrubRange": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "description": "Viewport fraction from the trigger line to full progress. Native margin and threshold (or reveal start dial) set the trigger. Time delay, stagger, duration and bounce apply to timed modes only. Near the document end the range shifts earlier so the final state is reachable. Non-scrolling pages stay visible."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": "Following factor per reference frame, using the ScrollFocus house feel. 1 follows immediately."
         }
       },
-      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "reducedMotion": "Fully visible and still; no scrub, replay, springs, or parallax.",
       "demo": "demo/count-up.html"
     },
     {
@@ -563,16 +613,17 @@
       "dials": [
         "speed",
         "bounce",
-        "delay"
+        "delay",
+        "plays"
       ],
       "dialDefaults": {
         "speed": "normal",
         "bounce": "springy",
-        "delay": "short"
+        "delay": "short",
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "size",
-        "plays",
         "cascade",
         "direction",
         "fade",
@@ -662,9 +713,43 @@
             "Known word values for supported dial ids"
           ],
           "description": "Explicit props win; reduced motion always wins."
+        },
+        "plays": {
+          "type": "Plays",
+          "default": "scrub",
+          "options": [
+            "once",
+            "always",
+            "scrub"
+          ],
+          "description": "Scrub follows native scroll in both directions. Always resets outside view. Once retains progress. Explicit once takes priority."
+        },
+        "once": {
+          "type": "boolean",
+          "default": null,
+          "options": [
+            true,
+            false,
+            "undefined"
+          ],
+          "description": "Legacy override: true selects once, false selects always. Omit for the scrub default. Takes priority over plays prop and dial."
+        },
+        "scrubRange": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "description": "Viewport fraction from the trigger line to full progress. Native margin and threshold (or reveal start dial) set the trigger. Time delay, stagger, duration and bounce apply to timed modes only. Near the document end the range shifts earlier so the final state is reachable. Non-scrolling pages stay visible."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": "Following factor per reference frame, using the ScrollFocus house feel. 1 follows immediately."
         }
       },
-      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "reducedMotion": "Fully visible and still; no scrub, replay, springs, or parallax.",
       "demo": "demo/star-pop.html"
     },
     {
@@ -1211,17 +1296,18 @@
         "speed",
         "size",
         "blur",
-        "delay"
+        "delay",
+        "plays"
       ],
       "dialDefaults": {
         "speed": "normal",
         "size": "medium",
         "blur": "soft",
-        "delay": "short"
+        "delay": "short",
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "bounce",
-        "plays",
         "cascade",
         "direction",
         "fade",
@@ -1356,9 +1442,43 @@
             "Known word values for supported dial ids"
           ],
           "description": "Explicit props win; reduced motion always wins."
+        },
+        "plays": {
+          "type": "Plays",
+          "default": "scrub",
+          "options": [
+            "once",
+            "always",
+            "scrub"
+          ],
+          "description": "Scrub follows native scroll in both directions. Always resets outside view. Once retains progress. Explicit once takes priority."
+        },
+        "once": {
+          "type": "boolean",
+          "default": null,
+          "options": [
+            true,
+            false,
+            "undefined"
+          ],
+          "description": "Legacy override: true selects once, false selects always. Omit for the scrub default. Takes priority over plays prop and dial."
+        },
+        "scrubRange": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "description": "Viewport fraction from the trigger line to full progress. Native margin and threshold (or reveal start dial) set the trigger. Time delay, stagger, duration and bounce apply to timed modes only. Near the document end the range shifts earlier so the final state is reachable. Non-scrolling pages stay visible."
+        },
+        "smoothing": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0.01,
+          "max": 1,
+          "description": "Following factor per reference frame, using the ScrollFocus house feel. 1 follows immediately."
         }
       },
-      "reducedMotion": "All content is final and fully visible; movement, blur, fading, counting and automatic playback stop. Controls remain usable.",
+      "reducedMotion": "Fully visible and still; no scrub, replay, springs, or parallax.",
       "demo": "demo/cta-pills.html"
     },
     {
@@ -1371,17 +1491,18 @@
         "speed",
         "size",
         "blur",
-        "delay"
+        "delay",
+        "plays"
       ],
       "dialDefaults": {
         "speed": "normal",
         "size": "medium",
         "blur": "soft",
-        "delay": "none"
+        "delay": "none",
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "bounce",
-        "plays",
         "cascade",
         "direction",
         "fade",
@@ -1499,7 +1620,7 @@
           "options": [
             "Supported word settings"
           ],
-          "description": "Explicit props win; reduced motion always wins."
+          "description": "Explicit props win; reduced motion always wins. plays is accepted; the image-load entrance remains once per source for all values. There is no on-scroll stage and large images never blur on scroll."
         }
       },
       "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
@@ -1514,16 +1635,17 @@
       "dials": [
         "speed",
         "size",
-        "direction"
+        "direction",
+        "plays"
       ],
       "dialDefaults": {
         "speed": "normal",
         "size": "medium",
-        "direction": "down"
+        "direction": "down",
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "bounce",
-        "plays",
         "delay",
         "cascade",
         "fade",
@@ -1595,7 +1717,7 @@
           "options": [
             "Supported word settings"
           ],
-          "description": "Explicit props win; reduced motion always wins."
+          "description": "Explicit props win; reduced motion always wins. plays is accepted; all values retain continuous reversible parallax as this is already scroll-linked."
         }
       },
       "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
@@ -1969,15 +2091,16 @@
       "status": "beta",
       "dials": [
         "speed",
-        "size"
+        "size",
+        "plays"
       ],
       "dialDefaults": {
         "speed": "normal",
-        "size": "medium"
+        "size": "medium",
+        "plays": "scrub"
       },
       "unsupportedDials": [
         "bounce",
-        "plays",
         "delay",
         "cascade",
         "direction",
@@ -2049,9 +2172,29 @@
             "Supported word settings"
           ],
           "description": "Explicit props win; reduced motion always wins."
+        },
+        "plays": {
+          "type": "Plays",
+          "default": "scrub",
+          "options": [
+            "once",
+            "always",
+            "scrub"
+          ],
+          "description": "Scrub follows native scroll in both directions. Always resets outside view. Once retains progress. Explicit once takes priority."
+        },
+        "once": {
+          "type": "boolean",
+          "default": null,
+          "options": [
+            true,
+            false,
+            "undefined"
+          ],
+          "description": "Legacy override: true selects once, false selects always. Omit for the scrub default. Takes priority over plays prop and dial."
         }
       },
-      "reducedMotion": "Final visible content, no movement, blur or fade; native controls remain fully usable.",
+      "reducedMotion": "Fully visible and still; no scrub, replay, springs, or parallax.",
       "demo": "demo/scroll-stack-cards.html"
     },
     {

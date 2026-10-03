@@ -68,3 +68,6 @@ export const designMotion = {
   stack: {scale: .95, smoothing: .14, top: 96, gap: 24},
   cursorFollow: {maxX: 26, maxY: 22, scale: 1.03, falloff: 420, strength: .06, smoothing: .08},
 } as const;
+
+// Entrances finish over 40% of a viewport and share ScrollFocus's following feel.
+export const entranceScrub = {range: .4, smoothing: batchMotion.focus.smoothing} as const;

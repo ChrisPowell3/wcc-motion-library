@@ -3,7 +3,7 @@ export const SHARED_DIALS = Object.freeze({
   speed: Object.freeze(['slow', 'normal', 'fast'] as const),
   size: Object.freeze(['small', 'medium', 'large'] as const),
   bounce: Object.freeze(['none', 'soft', 'springy'] as const),
-  plays: Object.freeze(['once', 'always'] as const),
+  plays: Object.freeze(['once', 'always', 'scrub'] as const),
   delay: Object.freeze(['none', 'short', 'long'] as const),
   cascade: Object.freeze(['together', 'cascade'] as const),
   direction: Object.freeze(['up', 'down', 'left', 'right'] as const),
@@ -20,6 +20,8 @@ export const PIECE_DIALS = Object.freeze({
   flick: Object.freeze(['soft', 'normal', 'strong'] as const),
 });
 
+export type Plays = (typeof SHARED_DIALS.plays)[number];
+
 export type DialId = keyof typeof SHARED_DIALS | keyof typeof PIECE_DIALS;
 export type MotionDials = Partial<Record<DialId, string>>;
 
@@ -29,20 +31,20 @@ const support: Readonly<Record<string, readonly DialId[]>> = {
   'swipe-carousel': ['speed', 'size', 'bounce', 'autoplay', 'loop', 'sideCards', 'flick'],
   'scroll-focus': ['speed', 'size', 'blur'],
   'count-up': ['speed', 'delay', 'plays'],
-  'star-pop': ['speed', 'bounce', 'delay'],
+  'star-pop': ['plays', 'speed', 'bounce', 'delay'],
   'marquee': ['speed', 'direction', 'size'],
   'float': ['speed', 'size'],
   'hover-tilt': ['size', 'speed'],
   'hover-lift': ['size', 'speed'],
   'image-hover-zoom': ['size', 'speed'],
   'accordion': ['speed', 'cascade'],
-  'cta-pills': ['speed', 'size', 'blur', 'delay'],
-  'image-load-blur-in': ['speed', 'size', 'blur', 'delay'],
-  'parallax-drift': ['speed', 'size', 'direction'],
+  'cta-pills': ['plays', 'speed', 'size', 'blur', 'delay'],
+  'image-load-blur-in': ['plays', 'speed', 'size', 'blur', 'delay'],
+  'parallax-drift': ['plays', 'speed', 'size', 'direction'],
   'cursor-proximity-fade': ['size', 'delay'],
   'fullscreen-viewer': ['speed', 'size', 'loop', 'fade'],
   'pinned-scroll-story': ['speed', 'size', 'blur', 'fade'],
-  'scroll-stack-cards': ['speed', 'size'],
+  'scroll-stack-cards': ['plays', 'speed', 'size'],
   'cursor-follow-image': ['speed', 'size'],
 };
 

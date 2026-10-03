@@ -42,3 +42,13 @@ describe('ImageLoadBlurIn',()=>{
   expect(resolveImageLoadSettings({duration:0,startScale:1,blur:0,delay:0,dials:{speed:'slow',size:'large',blur:'strong',delay:'long'}})).toMatchObject({duration:0,startScale:1,blur:0,delay:0});
  });
 });
+
+
+it.each(['scrub', 'always', 'once'])('keeps image load once and sharp during scroll with plays=%s', async plays => {
+  const view = render(<ImageLoadBlurIn src="photo.jpg" alt="Load only" dials={{plays}} duration={.03}/>);
+  const img = screen.getByAltText('Load only');
+  fireEvent.load(img); await waitFor(() => expect(img.style.filter).not.toBe('none')); await waitFor(() => expect(img.style.filter).toBe('none'));
+  for (const value of [1000, 0, 1000]) {vi.stubGlobal('scrollY', value); fireEvent.scroll(window); fireEvent.load(img); expect(img.style.filter).toBe('none');}
+  preference.reduced = true; view.rerender(<ImageLoadBlurIn src="other.jpg" alt="Load only" dials={{plays}}/>);
+  fireEvent.load(img); await waitFor(() => {expect(img.style.filter).toBe('none'); expect(img.style.transform).toBe('none');});
+});

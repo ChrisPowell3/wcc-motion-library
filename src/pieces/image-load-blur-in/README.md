@@ -29,3 +29,8 @@ Speed uses the fast/base/slow house duration ratios. Size changes the excess
 scale to half/normal/double. Blur none/soft/strong means0/6/10px. Delay
 none/short/long uses0/durations.fast/durations.slow. Explicit props win.
 This is a load entrance, never a scroll-linked image blur.
+
+
+### Playback (0.5.0)
+
+The plays dial defaults to scrub and accepts once/always/scrub. The page-load stage remains once per source for all three values. This piece has no on-scroll stage; it never blurs large images on scroll.

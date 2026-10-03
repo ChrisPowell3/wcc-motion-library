@@ -12,9 +12,9 @@ import {resolveMarqueeSettings} from '../src/pieces/marquee/dials';
 
 const pieces:[string,(props:{dials?:MotionDials})=>unknown,(keyof typeof SHARED_DIALS)[]][]=[
  ['CountUp',resolveCountUpSettings,['speed','delay','plays']],
- ['StarPop',resolveStarPopSettings,['speed','bounce','delay']],
+ ['StarPop',resolveStarPopSettings,['speed','bounce','delay','plays']],
  ['Float',resolveFloatSettings,['speed','size']],
- ['CtaPills',resolveCtaPillsSettings,['speed','size','blur','delay']],
+ ['CtaPills',resolveCtaPillsSettings,['speed','size','blur','delay','plays']],
  ['ScrollFocus',resolveScrollFocus,['speed','size','blur']],
  ['HoverTilt',resolveHoverTilt,['speed','size']],
  ['HoverLift',resolveHoverLift,['speed','size']],
