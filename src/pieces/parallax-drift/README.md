@@ -24,3 +24,8 @@ Gently moves supplied content downward as the page scrolls. Built fresh from the
 The default target is `clamp(pageScrollY × .08, 0, 70)`. This is a page-origin effect intended for hero media; below-fold media may already be at its maximum displacement when reached. Put clipping and sufficient image overscan on the outer wrapper when needed. The inner wrapper owns the transform, leaving measurement geometry stationary.
 
 Reduced motion renders without displacement and responds to live preference changes. All content is visible during server rendering. Native page scrolling, touch gestures, focus, and descendant controls remain available. Scroll/resize observations share the library's passive observer and frame scheduler; no animation runs after settling or unmount.
+
+
+### Playback (0.5.0)
+
+The plays dial defaults to scrub and accepts once/always/scrub. This already scroll-linked piece keeps continuous reversible drift for all three values; reduced motion disables it.

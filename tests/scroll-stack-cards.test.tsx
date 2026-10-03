@@ -10,11 +10,11 @@ beforeEach(()=>{frames=new Map();time=0;tops=[96,196];height=200;reduced=Object.
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 describe('ScrollStackCards',()=>{
   it('maps every supported dial, explicit values and safe bounds',()=>{
-    expect(resolveScrollStackCards({})).toEqual({scale:.95,smoothing:.14,top:96,gap:24});
+    expect(resolveScrollStackCards({})).toEqual({plays:'scrub',scale:.95,smoothing:.14,top:96,gap:24});
     for(const [size,scale] of [['small',.975],['medium',.95],['large',.925]] as const)expect(resolveScrollStackCards({dials:{size}}).scale).toBeCloseTo(scale);
     expect(resolveScrollStackCards({dials:{speed:'slow'}}).smoothing).toBeLessThan(.14);expect(resolveScrollStackCards({dials:{speed:'normal'}}).smoothing).toBe(.14);expect(resolveScrollStackCards({dials:{speed:'fast'}}).smoothing).toBeGreaterThan(.14);
-    expect(resolveScrollStackCards({scale:1,smoothing:1,top:0,gap:0,dials:{size:'large',speed:'slow'}})).toEqual({scale:1,smoothing:1,top:0,gap:0});
-    expect(resolveScrollStackCards({scale:0,smoothing:NaN,top:Infinity,gap:900})).toEqual({scale:.8,smoothing:.14,top:96,gap:160});expect(resolveScrollStackCards({dials:{direction:'up',blur:'strong'}})).toEqual(resolveScrollStackCards({}));
+    expect(resolveScrollStackCards({scale:1,smoothing:1,top:0,gap:0,dials:{size:'large',speed:'slow'}})).toEqual({plays:'scrub',scale:1,smoothing:1,top:0,gap:0});
+    expect(resolveScrollStackCards({scale:0,smoothing:NaN,top:Infinity,gap:900})).toEqual({plays:'scrub',scale:.8,smoothing:.14,top:96,gap:160});expect(resolveScrollStackCards({dials:{direction:'up',blur:'strong'}})).toEqual(resolveScrollStackCards({}));
     expect(stackProgress(96,196,200)).toBe(.5);expect(stackProgress(96,500,200)).toBe(0);expect(stackProgress(96,0,200)).toBe(1);expect(stackProgress(96,0,0)).toBe(0);
   });
   it('renders empty and single-card stacks and readable server controls',()=>{
@@ -63,5 +63,25 @@ describe('ScrollStackCards',()=>{
     height=900;fireEvent.resize(window);tick();expect(first.parentElement!.style.position).toBe('relative');expect(first.parentElement!.style.top).toBe('');expect(first.style.transform).toBe('none');
     height=200;fireEvent.resize(window);tick(2);expect(first.parentElement!.style.position).toBe('sticky');
     act(()=>{reduced.matches=true;reduced.dispatchEvent(new Event('change'));});expect(first.parentElement!.style.position).toBe('relative');expect(first.parentElement!.style.top).toBe('');expect(first.style.transform).toBe('none');expect(frames.size).toBe(0);view.unmount();expect(frames.size).toBe(0);
+  });
+});
+
+
+describe('stack playback modes', () => {
+  it.each(['scrub', 'once', 'always'] as const)('%s reverses or retains overlap and resets always outside view', plays => {
+    tops = [96, 96];
+    render(<ScrollStackCards smoothing={1} dials={{plays}}><span>First</span><span>Second</span></ScrollStackCards>); tick(2);
+    const layer = screen.getByText('First').parentElement!;
+    expect(layer.style.transform).toBe('scale(0.95)');
+    tops = [96, 196]; fireEvent.scroll(window); tick(2);
+    expect(layer.style.transform).toBe(plays === 'scrub' ? 'scale(0.975)' : 'scale(0.95)');
+    tops = [1000, 1300]; fireEvent.scroll(window); tick(2);
+    expect(layer.style.transform).toBe(plays === 'once' ? 'scale(0.95)' : 'none');
+    tops = [96, 196]; fireEvent.scroll(window); tick(2);
+    expect(layer.style.transform).toBe(plays === 'once' ? 'scale(0.95)' : 'scale(0.975)');
+    tops = [96, 96]; fireEvent.scroll(window); tick(2);
+    expect(layer.style.transform).toBe('scale(0.95)');
+    act(() => {reduced.matches = true; reduced.dispatchEvent(new Event('change'));});
+    expect(layer.style.transform).toBe('none'); expect(frames.size).toBe(0);
   });
 });

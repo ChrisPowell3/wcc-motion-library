@@ -40,3 +40,12 @@ describe('ParallaxDrift', () => {
     act(()=>{reduced.matches=false;reduced.dispatchEvent(new Event('change'));}); tick(); expect(content.style.transform).not.toBe('none'); view.unmount(); expect(frames.size).toBe(0);
   });
 });
+
+
+it.each(['scrub', 'always', 'once'])('keeps parallax continuously linked with plays=%s', plays => {
+  render(<ParallaxDrift dials={{plays}} smoothing={1}><span>Linked</span></ParallaxDrift>);
+  const layer = screen.getByText('Linked').parentElement!;
+  for (const value of [500, 0, 500]) {vi.stubGlobal('scrollY', value); fireEvent.scroll(window); tick(); expect(layer.style.transform).toBe(value ? 'translate3d(0,40px,0)' : 'none');}
+  act(() => {reduced.matches = true; reduced.dispatchEvent(new Event('change'));});
+  expect(layer.style.transform).toBe('none'); expect(frames.size).toBe(0);
+});

@@ -42,7 +42,7 @@ const root=document.getElementById('root')!;
 const selected=root.dataset.piece;
 function App(){
  const ids=selected?[selected]:batchIds;
- return <><header><a href="./index.html">← All library demos</a><p className="eyebrow">WCC Motion Library · 0.4.0</p><ScrollRevealRise dials={{blur:'strong',fade:'full',bounce:'none',start:'load'}} distance={batchMotion.blurRise.distance} duration={batchMotion.blurRise.duration} stagger={batchMotion.blurRise.heroStagger*1000} delay={batchMotion.blurRise.heroDelay*1000}><h1>Small details.<br/>A little more life.</h1><p>Explore the motion batch with plain shapes, words, and the same shared dials.</p></ScrollRevealRise><nav>{ids.map(id=><a href={`#${id}`} key={id}>{catalog.pieces.find(p=>p.id===id)?.name}</a>)}</nav></header>
+ return <><header><a href="./index.html">← All library demos</a><p className="eyebrow">WCC Motion Library · 0.5.0</p><ScrollRevealRise dials={{blur:'strong',fade:'full',bounce:'none',start:'load'}} distance={batchMotion.blurRise.distance} duration={batchMotion.blurRise.duration} stagger={batchMotion.blurRise.heroStagger*1000} delay={batchMotion.blurRise.heroDelay*1000}><h1>Small details.<br/>A little more life.</h1><p>Explore the motion batch with plain shapes, words, and the same shared dials.</p></ScrollRevealRise><nav>{ids.map(id=><a href={`#${id}`} key={id}>{catalog.pieces.find(p=>p.id===id)?.name}</a>)}</nav></header>
  <main>{ids.map(id=><PieceDemo key={id} id={id}/>)}</main><footer id="next"><h2>Room to keep scrolling.</h2><p>Native scrolling, clear focus, and reduced motion are built in.</p></footer></>;
 }
 createRoot(root).render(<App/>);

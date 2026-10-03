@@ -2,7 +2,7 @@
 
 Content rises into place as its leading edge enters view. Text and buttons have
 a short settle; images travel farther and take longer. Built from scratch using
-React, Motion and the library's timing tokens. No scroll, wheel or touch handlers.
+React, Motion and the library's timing tokens. Scrub uses shared passive scroll observation; wheel and touch remain native.
 
 ```tsx
 import {ScrollRevealRise} from '@wcc/motion-library';
@@ -46,7 +46,7 @@ outline. Focusing any descendant cancels that item's delay and reveals it at onc
 | `trigger` |`scroll`|`scroll` or `load`; overrides the start dial |
 | `stagger` | 90 | 0–300 ms between siblings |
 | `startOpacity` | 0.5; image: 0 | 0–0.6 |
-| `once` | true | true or false |
+| `once` | undefined (scrub) | true or false |
 | `margin` | `0px 0px -10% 0px` | IntersectionObserver root margin: 1–4 px/% values |
 
 Set `dials` for word-based controls. Omitting it keeps the existing preset;
@@ -68,7 +68,7 @@ Set `dials` for word-based controls. Omitting it keeps the existing preset;
 | `speed` | `slow`: 600 ms; `normal`: 320 ms; `fast`: 180 ms | `normal`; image: `slow` |
 | `size` | `small`: half preset distance; `medium`: preset distance; `large`: double, capped at 120 px | `medium` |
 | `bounce` | `none`: house ease; `soft`: settle curve; `springy`: snap spring curve | `soft`; image: `none` |
-| `plays` | `once`: one entrance per mount; `always`: repeat after leaving view | `once` |
+| `plays` | `scrub`: reversible scroll progress; `once`: one entrance per mount; `always`: repeat after leaving view | `scrub` |
 | `delay` | `none`: 0; `short`: 180 ms; `long`: 600 ms | `none` |
 | `cascade` | `together`: no sibling stagger; `cascade`: 90 ms between siblings | `cascade` |
 | `direction` | `up`: starts below; `down`: above; `left`: to the left; `right`: to the right | `up` |
@@ -82,10 +82,10 @@ existing clamps; non-finite values use the resolved dial or preset default.
 `fade: 'none'` stays fully opaque; an explicit `startOpacity` still clamps to 0–0.6.
 Size resolves to 12/24/48 px for blocks and buttons, and 32/64/120 px for images.
 
-Each item must intersect independently before its delay starts. The sibling
+In timed modes, each item must intersect independently before its delay starts. The sibling
 portion of the delay is capped at nine beats and `durations.entrance` (900 ms);
 the selected `delay` is added separately.
-Already-visible unblurred scroll content keeps a subtle entrance: distance at most 8 px, opacity
+In timed modes, already-visible unblurred scroll content keeps a subtle entrance: distance at most 8 px, opacity
 at least 0.8, `durations.fast` and the house ease. Its sibling wait is capped at
 180 ms, but the selected delay still applies. Its observer uses the actual
 viewport (zero margin), including the bottom inset strip, so `start` affects
@@ -100,7 +100,7 @@ percentage margins are relative to the root's width; use explicit px when that
 width-dependent behavior is unwanted.
 Threshold zero triggers even for elements taller than the viewport. The observer
 watches the stationary anchor, so the entrance transform cannot shift its trigger.
-A missing observer or invalid margin fails open, with fully visible content.
+Timed modes fail open without IntersectionObserver. Invalid margins leave content fully visible in every mode.
 
 `once` is per mounted, keyed child. With `once={false}`, leaving view resets the
 item instantly and the next entry reveals again; there is no animated exit.
@@ -119,10 +119,10 @@ use `startOpacity={0.5}` when images should remain translucent before revealing.
 ## Blur-rise
 
 Use `dials={{blur: 'strong', fade: 'full', bounce: 'none'}}` with `distance={16}`,
-`duration={1.1}` and `stagger={70}` for the reference scroll entrance. For a hero,
+`duration={1.1}` and `stagger={70}` with `plays="once"` or `plays="always"` for the reference timed scroll entrance. For a hero,
 add `start: 'load'`, `delay={350}` and `stagger={110}`. These durations/offsets have
 named presets in `batchMotion.blurRise`; see the root README for token-based code.
-Blurred and page-load entrances use their full configured timing even above the
+Timed blurred and page-load entrances use their full configured timing even above the
 fold. They finish with `filter: none`, and focus clears the blur immediately.
 `load` plays once on mount without an IntersectionObserver; `plays: 'always'`
 only repeats scroll-triggered entrances. Blur is never a continuous image-scroll
@@ -131,3 +131,20 @@ animation. Reduced motion bypasses all of these effects.
 The `as="image"` scroll preset always stays sharp, including when a blur dial or
 prop is supplied. This enforces the rule against blurring large images on scroll.
 Use blurred scroll entrances for text and small blocks, not large images.
+
+
+### Playback (0.5.0)
+
+The default is `dials={{plays: 'scrub'}}`: scroll down to reveal, up to reverse,
+and down to reveal again. Set `plays="once"` or `plays="always"` for timed
+entrances. Explicit `once` overrides the plays prop and dial (`true` = once,
+`false` = always); its default is undefined. The plays prop overrides the dial.
+
+`scrubRange` is the distance from trigger to completion in viewport heights
+(default 0.4, range 0.1–1). `smoothing` is the following factor per reference frame
+(default 0.14, range 0.01–1). Margin/threshold (and reveal's start dial) set the
+trigger. Delay, duration, stagger and bounce tune timed modes only. In scrub,
+position maps directly to progress; pills have no independent idle bob.
+The range shifts earlier near the document end so final-page content can complete;
+non-scrolling pages stay visible. SSR and reduced motion show final content without motion. Focused controls
+stay fully visible.

@@ -4,11 +4,12 @@ import {useLayoutEffect, useMemo, useRef, useState, type CSSProperties} from 're
 import {animate, useMotionValue} from 'motion/react';
 import {cleanDials, type MotionDials} from '../../dials';
 import {batchMotion} from '../../tokens';
+import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
 import {observeVisibility} from '../../internal/observe';
 import {useReducedMotionPreference} from '../../useReducedMotionPreference';
 import {bounded, deviceReduced, dialDelay, speedRatio} from '../float/helpers';
 
-export interface CountUpProps {
+export interface CountUpProps extends EntranceOptions {
   children: string | readonly string[];
   dials?: MotionDials;
   /** Seconds, 0–10. Default 2.2. */
@@ -30,7 +31,7 @@ export function resolveCountUpSettings(props: Omit<CountUpProps, 'children'>) {
     duration: bounded(props.duration, base.duration * speedRatio(dials.speed), 0, 10),
     delay: bounded(props.delay, dialDelay(dials.delay, base.delay), 0, 5),
     stagger: bounded(props.stagger, base.stagger, 0, 1),
-    once: props.once ?? dials.plays !== 'always',
+    ...resolveEntrance(props, dials),
     threshold: bounded(props.threshold, .12, 0, 1), margin: props.margin ?? '0px 0px -6% 0px',
   };
 }
@@ -64,6 +65,10 @@ function Count({value, index, settings, reduced, className, style}: {
     if (reduced || deviceReduced() || (settings.once && played.current) || countText(value, 0) === value) {
       finish(); return () => {off(); progress.stop();};
     }
+    if (settings.plays === 'scrub') {
+      const release = observeEntranceScrub(element, value => progress.set(value), settings);
+      return () => {release(); off(); progress.stop();};
+    }
     progress.set(0); update();
     let inside = false;
     const release = observeVisibility(element, visible => {
@@ -88,7 +93,7 @@ export function CountUp({children, className, style, ...props}: CountUpProps) {
   const reduced = useReducedMotionPreference();
   // Inline dial objects are common in JSX; only semantic values may restart motion.
   const dials = cleanDials('count-up', props.dials);
-  const settings = useMemo(() => resolveCountUpSettings({...props, dials}), [dials.speed, dials.delay, dials.plays, props.duration, props.delay, props.stagger, props.once, props.threshold, props.margin]);
+  const settings = useMemo(() => resolveCountUpSettings({...props, dials}), [props.plays, props.scrubRange, props.smoothing, dials.speed, dials.delay, dials.plays, props.duration, props.delay, props.stagger, props.once, props.threshold, props.margin]);
   const values = typeof children === 'string' ? [children] : children;
   return <>{values.map((value, index) => <Count key={`${index}:${value}`} value={value} index={index} settings={settings} reduced={reduced} className={className} style={style}/>)}</>;
 }

@@ -4,7 +4,7 @@ import {ease, settleEase, springyEase} from '../src/tokens';
 
 describe('reveal dial resolution', () => {
   it('preserves the existing distinct block and image presets', () => {
-    expect(resolveRevealDials({})).toMatchObject({as: 'block', distance: 24, duration: 'base', stagger: 90, startOpacity: 0.5, once: true, margin: '0px 0px -10% 0px', axis: 'y', offsetSign: 1, delay: 0, bounceEase: settleEase});
+    expect(resolveRevealDials({})).toMatchObject({as: 'block', distance: 24, duration: 'base', stagger: 90, startOpacity: 0.5, once: false, plays: 'scrub', margin: '0px 0px -10% 0px', axis: 'y', offsetSign: 1, delay: 0, bounceEase: settleEase});
     expect(resolveRevealDials({as: 'image'})).toMatchObject({distance: 64, duration: 'slow', startOpacity: 0, bounceEase: ease});
     expect(resolveRevealDials({as: 'button'})).toMatchObject({distance: 24, duration: 'base', startOpacity: 0.5, bounceEase: settleEase});
   });
@@ -18,7 +18,7 @@ describe('reveal dial resolution', () => {
   it.each([['none', ease], ['soft', settleEase], ['springy', springyEase]] as const)('resolves bounce %s', (bounce, expected) => {
     expect(resolveRevealDials({dials: {bounce}}).bounceEase).toBe(expected);
   });
-  it.each([['once', true], ['always', false]] as const)('resolves plays %s', (plays, once) => {
+  it.each([['once', true], ['always', false], ['scrub', false]] as const)('resolves plays %s', (plays, once) => {
     expect(resolveRevealDials({dials: {plays}}).once).toBe(once);
   });
   it.each([['none', 0], ['short', 0.18], ['long', 0.6]] as const)('resolves delay %s', (delay, seconds) => {

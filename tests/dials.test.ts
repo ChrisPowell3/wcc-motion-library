@@ -3,7 +3,7 @@ import * as library from '../src';
 
 const shared = {
   speed: ['slow', 'normal', 'fast'], size: ['small', 'medium', 'large'], bounce: ['none', 'soft', 'springy'],
-  plays: ['once', 'always'], delay: ['none', 'short', 'long'], cascade: ['together', 'cascade'],
+  plays: ['once', 'always', 'scrub'], delay: ['none', 'short', 'long'], cascade: ['together', 'cascade'],
   direction: ['up', 'down', 'left', 'right'], fade: ['none', 'soft', 'full'], start: ['early', 'middle', 'late', 'load'], blur: ['none', 'soft', 'strong'],
 };
 const piece = {autoplay: ['off', 'on'], loop: ['off', 'on'], sideCards: ['normal', 'smaller', 'dimmer'], flick: ['soft', 'normal', 'strong']};

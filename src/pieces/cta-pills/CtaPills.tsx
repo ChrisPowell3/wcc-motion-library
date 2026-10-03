@@ -4,12 +4,13 @@ import {Children, useLayoutEffect, useMemo, useRef, type CSSProperties, type Rea
 import {animate, motion, useMotionValue, useTransform} from 'motion/react';
 import {cleanDials, type MotionDials} from '../../dials';
 import {batchMotion, blurStrength} from '../../tokens';
+import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
 import {observeVisibility} from '../../internal/observe';
 import {useReducedMotionPreference} from '../../useReducedMotionPreference';
 import {bounded, deviceReduced, dialDelay, dialSize, speedRatio} from '../float/helpers';
 import {createIdleTrack} from '../float/idle';
 
-export interface CtaPillsProps {
+export interface CtaPillsProps extends EntranceOptions {
   children: ReactNode;
   dials?: MotionDials;
   duration?: number;
@@ -32,6 +33,7 @@ export function resolveCtaPillsSettings(props: Omit<CtaPillsProps, 'children'>) 
   const dials = cleanDials('cta-pills', props.dials), base = batchMotion.pills, ratio = speedRatio(dials.speed), size = dialSize(dials.size);
   const blur = dials.blur === 'none' ? blurStrength.none : dials.blur === 'strong' ? blurStrength.strong : blurStrength.soft;
   return {
+    ...resolveEntrance(props, dials),
     duration: bounded(props.duration, base.duration * ratio, 0, 5),
     delay: bounded(props.delay, dialDelay(dials.delay, base.delay), 0, 5),
     stagger: bounded(props.stagger, base.stagger, 0, 1),
@@ -63,9 +65,20 @@ function Pill({children, index, settings, reduced, className, style}: {
     const stop = () => {stopEntrance(); idle?.stop(); bob.stop();};
     const finish = () => {stop(); finishEntrance(); bob.set(0); played.current = true;};
     finishNow.current = finish;
-    if (reduced || deviceReduced() || focused.current) {finish(); return stop;}
-    const wasPlayed = played.current;
-    if (wasPlayed) finishEntrance();
+    if (reduced || deviceReduced()) {finish(); return stop;}
+    if (settings.plays === 'scrub') {
+      // Scrub owns the complete entrance; no independent bob can obscure reversal.
+      bob.set(0);
+      const release = observeEntranceScrub(element, progress => {
+        const p = focused.current ? 1 : progress;
+        y.set(settings.distance * (1 - p)); scale.set(settings.scale + (1 - settings.scale) * p);
+        opacity.set(p); blur.set(settings.blur * (1 - p));
+      }, settings);
+      return () => {release(); stop(); finishNow.current = () => {};};
+    }
+    const wasPlayed = settings.once && played.current;
+    if (!settings.once) played.current = false;
+    if (wasPlayed || focused.current) finishEntrance();
     else {y.set(settings.distance); scale.set(settings.scale); opacity.set(0); blur.set(settings.blur);}
     const update = () => {
       if (!active || focused.current) return;
@@ -83,21 +96,29 @@ function Pill({children, index, settings, reduced, className, style}: {
       }
       if (idle) {if (visible && !doc.hidden) idle.play(); else idle.pause();}
     };
-    const release = observeVisibility(element, next => {visible = next; update();}, {threshold: settings.threshold, rootMargin: settings.margin});
+    const release = observeVisibility(element, next => {
+      visible = next;
+      if (!visible && !settings.once && !focused.current) {
+        stop(); idle = undefined; bob.set(0); played.current = false;
+        y.set(settings.distance); scale.set(settings.scale); opacity.set(0); blur.set(settings.blur);
+      }
+      update();
+    }, {threshold: settings.threshold, rootMargin: settings.margin});
     doc.addEventListener('visibilitychange', update);
     return () => {active = false; release(); doc.removeEventListener('visibilitychange', update); stop(); finishNow.current = () => {};};
   }, [index, settings, reduced, y, scale, opacity, blur, bob]);
-  return <motion.div ref={node} initial={false} className={className}
+  return <div ref={node} className={className} style={{display: 'inline-block', ...style}}
     onFocusCapture={() => {focused.current = true; finishNow.current();}}
-    style={{display: 'inline-block', ...style, y: reduced ? 0 : y, scale: reduced ? 1 : scale, opacity: reduced ? 1 : opacity, filter: reduced ? 'none' : filter}}>
+    onBlurCapture={event => {if (!event.currentTarget.contains(event.relatedTarget)) focused.current = false;}}>
+    <motion.div initial={false} style={{display: 'inline-block', y: reduced ? 0 : y, scale: reduced ? 1 : scale, opacity: reduced ? 1 : opacity, filter: reduced ? 'none' : filter}}>
     <motion.div initial={false} style={{y: reduced ? 0 : bob}}>{children}</motion.div>
-  </motion.div>;
+  </motion.div></div>;
 }
 /** A soft pill entrance followed by an independent, shallow idle float. */
 export function CtaPills({children, className, style, ...props}: CtaPillsProps) {
   const reduced = useReducedMotionPreference();
   // Inline dial objects are common in JSX; only semantic values may restart motion.
   const dials = cleanDials('cta-pills', props.dials);
-  const settings = useMemo(() => resolveCtaPillsSettings({...props, dials}), [dials.speed, dials.size, dials.blur, dials.delay, props.duration, props.delay, props.stagger, props.distance, props.scale, props.blur, props.bob, props.floatDuration, props.floatStep, props.floatDelay, props.floatDelayStep, props.threshold, props.margin]);
+  const settings = useMemo(() => resolveCtaPillsSettings({...props, dials}), [props.plays, props.once, props.scrubRange, props.smoothing, dials.plays, dials.speed, dials.size, dials.blur, dials.delay, props.duration, props.delay, props.stagger, props.distance, props.scale, props.blur, props.bob, props.floatDuration, props.floatStep, props.floatDelay, props.floatDelayStep, props.threshold, props.margin]);
   return <>{Children.toArray(children).map((child, index) => <Pill key={typeof child === 'object' && 'key' in child ? child.key : index} index={index} settings={settings} reduced={reduced} className={className} style={style}>{child}</Pill>)}</>;
 }
