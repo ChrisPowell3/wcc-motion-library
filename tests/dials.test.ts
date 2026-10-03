@@ -5,6 +5,7 @@ const shared = {
   speed: ['slow', 'normal', 'fast'], size: ['small', 'medium', 'large'], bounce: ['none', 'soft', 'springy'],
   plays: ['once', 'always', 'scrub'], delay: ['none', 'short', 'long'], cascade: ['together', 'cascade'],
   direction: ['up', 'down', 'left', 'right'], fade: ['none', 'soft', 'full'], start: ['early', 'middle', 'late', 'load'], blur: ['none', 'soft', 'strong'],
+  align: ['start', 'center'],
 };
 const piece = {autoplay: ['off', 'on'], loop: ['off', 'on'], sideCards: ['normal', 'smaller', 'dimmer'], flick: ['soft', 'normal', 'strong']};
 
@@ -20,10 +21,16 @@ describe('shared motion dials', () => {
   it('keeps every supported value and drops every unsupported dial for each piece', () => {
     for (const [id, values] of Object.entries({...shared, ...piece})) {
       for (const value of values) {
-        expect(library.cleanDials('scroll-reveal-rise', {[id]: value})).toEqual(id in shared ? {[id]: value} : {});
+        expect(library.cleanDials('scroll-reveal-rise', {[id]: value})).toEqual(id in shared && id !== 'align' ? {[id]: value} : {});
         expect(library.cleanDials('swipe-carousel', {[id]: value})).toEqual(['speed', 'size', 'bounce', ...Object.keys(piece)].includes(id) ? {[id]: value} : {});
       }
     }
+  });
+  it('shares alignment vocabulary but only enables it on the pinned story', () => {
+    expect(library.cleanDials('pinned-scroll-story', {align: 'center'})).toEqual({align: 'center'});
+    expect(library.cleanDials('pinned-scroll-story', {align: 'start'})).toEqual({align: 'start'});
+    expect(library.cleanDials('pinned-scroll-story', {align: 'bottom'})).toEqual({});
+    expect(library.cleanDials('scroll-reveal-rise', {align: 'center'})).toEqual({});
   });
   it('drops unknown keys, invalid values, raw numbers and inherited properties without mutating input', () => {
     const input = Object.assign(Object.create({size: 'large'}), {speed: 'fast', bounce: 'elastic', delay: 300, random: 'fast', fade: 'FULL'});

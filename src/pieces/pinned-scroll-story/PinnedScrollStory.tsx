@@ -15,8 +15,8 @@ function StoryProgress({progress, pinned}: {progress: MotionValue<number>; pinne
   return <div role="progressbar" aria-label="Story progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pinned ? percent : 100} style={{height: 3, width: 'min(240px, 100%)', background: 'color-mix(in srgb, currentColor 16%, transparent)', borderRadius: 3}}><motion.div style={{height: '100%', background: 'currentColor', transformOrigin: 'left', scaleX: pinned ? progress : 1}}/></div>;
 }
 
-function StoryPanel({active, pinned, id, label, duration, distance, blur, startOpacity, top, content, panelRef, contentRef}: {
-  active: boolean; pinned: boolean; id: string; label: string; duration: number; distance: number; blur: number; startOpacity: number; top: number; content: ReactNode;
+function StoryPanel({active, pinned, id, label, duration, distance, blur, startOpacity, top, align, content, panelRef, contentRef}: {
+  active: boolean; pinned: boolean; id: string; label: string; duration: number; distance: number; blur: number; startOpacity: number; top: number; align: string; content: ReactNode;
   panelRef: (node: HTMLDivElement | null) => void; contentRef: (node: HTMLDivElement | null) => void;
 }) {
   // Initial enhancement hides unselected panels immediately. Later departures
@@ -27,13 +27,13 @@ function StoryPanel({active, pinned, id, label, duration, distance, blur, startO
     animate={active ? {opacity: 1, y: 0, filter: 'none'} : {opacity: startOpacity, y: distance, filter: blur ? `blur(${blur}px)` : 'none'}}
     transition={{duration: pinned ? duration : 0, ease}}
     onAnimationComplete={() => setDisplay(previous => !previous.active && previous.visible ? {...previous, visible: false} : previous)}
-    style={{gridArea: pinned ? '1 / 1' : undefined, alignSelf: 'center', minWidth: 0, visibility: display.visible ? 'visible' : 'hidden', pointerEvents: active ? undefined : 'none', scrollMarginTop: top + 24}}>
+    style={{gridArea: pinned ? '1 / 1' : undefined, alignSelf: align, minWidth: 0, visibility: display.visible ? 'visible' : 'hidden', pointerEvents: active ? undefined : 'none', scrollMarginTop: top + 24}}>
     <div data-story-content="" ref={contentRef} style={{display: 'flow-root', minWidth: 0}}>{content}</div>
   </motion.div>;
 }
 export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLabel = 'Scroll story', className, style, ...settings}: PinnedScrollStoryProps) {
   const resolved = resolvePinnedScrollStory(settings);
-  const {top, trackPerSlide, duration, distance, blur, startOpacity} = resolved;
+  const {top, trackPerSlide, duration, distance, blur, startOpacity, align} = resolved;
   const reduced = useReducedMotionPreference();
   const root = useRef<HTMLElement>(null);
   const controls = useRef<HTMLElement>(null);
@@ -43,18 +43,26 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
   const documentTop = useRef(0);
   const id = useId();
   const count = items.length + 1;
-  const [layout, setLayout] = useState({fits: false, height: 0, media: [] as boolean[]});
+  const [layout, setLayout] = useState({fits: false, height: 0, tallest: 0, overview: 0, rail: 0, media: [] as boolean[]});
   const progress = useMotionValue(0);
   const [selected, setSelected] = useState(0);
   const pinned = layout.fits && !reduced && items.length > 0;
   const index = Math.min(selected, count - 1);
-  const span = layout.height * trackPerSlide * count;
   const available = Math.max(0, layout.height - top);
+  // 24px above/below, a 20px progress gutter, and the 3px progress bar.
+  const chrome = 71;
+  const rowHeight = Math.max(index === count - 1 ? layout.overview : layout.tallest, layout.rail);
+  const stageHeight = Math.min(available, rowHeight + chrome);
+  const endHeight = Math.min(available, Math.max(layout.overview, layout.rail) + chrome);
+  const tallestStage = Math.min(available, Math.max(layout.tallest, layout.rail) + chrome);
+  // Even the last instant before the overview must leave enough track below a
+  // taller scene. Very short requested intervals expand to prevent overlap.
+  const span = Math.max(layout.height * trackPerSlide, tallestStage - endHeight) * count;
 
   useEffect(() => {
     if (reduced || !items.length || !root.current) return;
     let stop: (() => void) | undefined;
-    let rejectedNarrowLayout = false;
+    let rejectedPinnedLayout = false;
     const measure = () => {
       if (stop) return;
       stop = subscribeFrame(() => {
@@ -73,10 +81,18 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
         // remeasures wrapped content at that width. If it overflows, stay in
         // flow until a viewport resize rather than oscillating between widths.
         const railHeight = measuredPinned ? Math.max(navHeight, count * 44) : count * 44;
-        const fitsHeight = height > top && heights.length === count && heights.every(value => value > 0) && Math.max(...heights, railHeight) + 75 <= height - top;
-        if (measuredPinned && !fitsHeight) rejectedNarrowLayout = true;
-        const fits = !readingFlow && !rejectedNarrowLayout && fitsHeight;
-        setLayout(previous => previous.fits === fits && previous.height === height && previous.media.join() === media.join() ? previous : {fits, height, media});
+        const tallest = Math.max(...heights);
+        const overview = heights[count - 1] ?? 0;
+        const fitsHeight = height > top && heights.length === count && heights.every(value => value > 0) && Math.max(tallest, railHeight) + chrome <= height - top;
+        // A compact stage at the document end cannot reach its pin endpoint.
+        // Use readable flow instead of extending the page with a blank spacer.
+        const documentHeight = document.documentElement.scrollHeight;
+        const trailing = rootRect ? documentHeight - (rootRect.bottom + window.scrollY) : 0;
+        const exitRoom = Math.max(0, height - top - (Math.max(overview, railHeight) + chrome));
+        const fitsDocument = documentHeight < height || trailing + 1 >= exitRoom;
+        if (measuredPinned && (!fitsHeight || !fitsDocument)) rejectedPinnedLayout = true;
+        const fits = !readingFlow && !rejectedPinnedLayout && fitsHeight && fitsDocument;
+        setLayout(previous => previous.fits === fits && previous.height === height && previous.tallest === tallest && previous.overview === overview && previous.rail === railHeight && previous.media.join() === media.join() ? previous : {fits, height, tallest, overview, rail: railHeight, media});
         // Check the newly reserved rail width even when ResizeObserver is absent.
         if (fits && !measuredPinned) measure();
         return false;
@@ -85,7 +101,7 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : undefined;
     contents.current.slice(0, count).forEach(node => {if (node) observer?.observe(node);});
     if (controls.current) observer?.observe(controls.current);
-    const resize = () => {rejectedNarrowLayout = false; measure();};
+    const resize = () => {rejectedPinnedLayout = false; measure();};
     window.addEventListener('resize', resize, {passive: true});
     measure();
     return () => {stop?.(); observer?.disconnect(); window.removeEventListener('resize', resize);};
@@ -93,9 +109,9 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
 
   useEffect(() => {
     if (!pinned || !root.current) return;
-    return observeViewport(root.current, (rect, height) => {
+    return observeViewport(root.current, rect => {
       documentTop.current = rect.top + window.scrollY;
-      const next = storyProgress(rect.top - top, height * trackPerSlide * count, count);
+      const next = storyProgress(rect.top - top, span, count);
       // A reader tabbed into a slide must never be left inside an inert panel.
       panels.current.forEach((panel, panelIndex) => {
         if (panelIndex !== next.index && panel?.contains(document.activeElement)) buttons.current[next.index]?.focus({preventScroll: true});
@@ -104,7 +120,7 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
       setSelected(previous => previous === next.index ? previous : next.index);
       return false;
     });
-  }, [pinned, top, trackPerSlide, count, progress]);
+  }, [pinned, top, span, count, progress]);
 
   const navigate = (target: number) => {
     if (pinned) window.scrollTo({top: documentTop.current - top + span * (target + .5) / count, behavior: 'smooth'});
@@ -118,15 +134,19 @@ export function PinnedScrollStory({items, overviewLabel = 'At a glance', ariaLab
   if (!items.length) return null;
   const labels = [...items.map(item => item.label), overviewLabel];
   const overview = <><h3 style={{margin: '0 0 24px'}}>{overviewLabel}</h3><div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: 16}}>{items.map((item, itemIndex) => <div key={`${item.id}-${itemIndex}`} style={{minWidth: 0, padding: 16, border: '1px solid currentColor', borderRadius: 16}}>{item.thumbnail}<div style={{marginTop: item.thumbnail ? 12 : 0}}>{item.label}</div></div>)}</div></>;
-  return <section ref={root} className={className} aria-label={ariaLabel} data-story-mode={pinned ? 'pinned' : 'flow'} style={{...style, position: 'relative', height: pinned ? available + span : undefined, minWidth: 0}}>
-    <div style={{position: pinned ? 'sticky' : 'relative', top: pinned ? top : undefined, height: pinned ? available : undefined, boxSizing: 'border-box', padding: '24px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24}}>
+  return <section ref={root} className={className} aria-label={ariaLabel} data-story-mode={pinned ? 'pinned' : 'flow'} style={{...style, position: 'relative', height: pinned ? endHeight + span : undefined, minWidth: 0}}>
+    {/* Reserve the final footprint throughout. The negative end margin lets taller
+        scenes stay sticky for the same travel, even with a short overview or fast
+        trackPerSlide. It vanishes on the overview; page height never jumps. */}
+    <div style={{position: pinned ? 'sticky' : 'relative', top: pinned ? top : undefined, height: pinned ? stageHeight : undefined, marginBottom: pinned ? endHeight - stageHeight : undefined, boxSizing: 'border-box', padding: '24px 0', display: 'flex', flexDirection: 'column', justifyContent: align === 'center' ? 'center' : 'flex-start', gap: 20}}>
       <div style={{display: 'grid', gridTemplateColumns: pinned ? 'minmax(0, 1fr) 44px' : 'minmax(0, 1fr)', alignItems: 'center', gap: 24, minWidth: 0}}>
-      <div style={{display: 'grid', gap: pinned ? 0 : 40, minWidth: 0}}>
+      {/* Contain a taller departing scene when the overview shortens the row. */}
+      <div style={{display: 'grid', gridTemplateRows: pinned ? 'minmax(0, 1fr)' : undefined, height: pinned ? rowHeight : undefined, overflow: pinned && index === count - 1 ? 'clip' : undefined, gap: pinned ? 0 : 40, minWidth: 0}}>
         {[...items.map(item => item.content), overview].map((content, panelIndex) => {
           const active = !pinned || panelIndex === index;
           const hiddenBlur = panelIndex === items.length || layout.media[panelIndex] ? 0 : blur;
           return <StoryPanel key={panelIndex} panelRef={node => {panels.current[panelIndex] = node;}} contentRef={node => {contents.current[panelIndex] = node;}}
-            id={`${id}-panel-${panelIndex}`} label={labels[panelIndex]} active={active} pinned={pinned} duration={duration} distance={panelIndex < index ? -distance : distance} blur={hiddenBlur} startOpacity={startOpacity} top={top} content={content}/>;
+            id={`${id}-panel-${panelIndex}`} label={labels[panelIndex]} active={active} pinned={pinned} duration={duration} distance={panelIndex < index ? -distance : distance} blur={hiddenBlur} startOpacity={startOpacity} top={top} align={align} content={content}/>;
         })}
       </div>
       <nav ref={controls} aria-label={`${ariaLabel} steps`} style={{display: 'flex', flexDirection: pinned ? 'column' : 'row', flexWrap: pinned ? 'nowrap' : 'wrap', alignItems: 'center', justifyContent: 'center'}}>

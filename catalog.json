@@ -1,6 +1,6 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "pieces": [
     {
       "id": "swipe-carousel",
@@ -155,7 +155,8 @@
         "direction",
         "fade",
         "start",
-        "blur"
+        "blur",
+        "align"
       ]
     },
     {
@@ -330,7 +331,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ]
     },
     {
@@ -360,7 +362,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -494,7 +497,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -632,7 +636,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -779,7 +784,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -875,7 +881,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -976,7 +983,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1070,7 +1078,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1150,7 +1159,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1230,7 +1240,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "items": {
@@ -1315,7 +1326,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1510,7 +1522,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "className": {
@@ -1654,7 +1667,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1755,7 +1769,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -1843,7 +1858,8 @@
         "blur",
         "autoplay",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "className": {
@@ -1968,13 +1984,15 @@
         "speed",
         "size",
         "blur",
-        "fade"
+        "fade",
+        "align"
       ],
       "dialDefaults": {
         "speed": "normal",
         "size": "medium",
         "blur": "strong",
-        "fade": "full"
+        "fade": "full",
+        "align": "start"
       },
       "unsupportedDials": [
         "bounce",
@@ -2034,7 +2052,7 @@
           "default": 0.6,
           "min": 0.2,
           "max": 2,
-          "description": "Viewport heights of native scroll per panel, including overview."
+          "description": "Viewport heights of native scroll per panel, including overview. Short intervals expand when needed to prevent a taller scene overlapping the following section."
         },
         "top": {
           "type": "number",
@@ -2078,6 +2096,15 @@
             "Supported word settings"
           ],
           "description": "Explicit props win; reduced motion always wins."
+        },
+        "align": {
+          "type": "string",
+          "default": "start",
+          "options": [
+            "start",
+            "center"
+          ],
+          "description": "Vertical panel alignment in the compact sticky stage. Explicit prop overrides the shared align dial."
         }
       },
       "reducedMotion": "All panels and the overview remain in natural flow with no pinning, motion or blur; navigation stays usable.",
@@ -2110,7 +2137,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
@@ -2223,7 +2251,8 @@
         "autoplay",
         "loop",
         "sideCards",
-        "flick"
+        "flick",
+        "align"
       ],
       "settings": {
         "children": {
