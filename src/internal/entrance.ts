@@ -1,6 +1,6 @@
-import {batchMotion, entranceScrub} from '../tokens';
-import type {MotionDials, Plays} from '../dials';
-import {observeViewport} from './viewport';
+import {batchMotion, entranceScrub} from '../tokens.js';
+import type {MotionDials, Plays} from '../dials.js';
+import {observeViewport} from './viewport.js';
 
 export interface EntranceOptions {
   /** Playback mode. Default scrub. Explicit once takes priority. */

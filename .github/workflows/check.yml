@@ -17,6 +17,16 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run check
+      - name: Remove generated output before rebuilding
+        run: rm -rf dist
       - run: npm run build
+      - name: Verify committed dist is current
+        run: |
+          git diff --exit-code dist
+          test -z "$(git ls-files --others --exclude-standard dist)"
+      - name: Verify the built package imports without a loader
+        run: >-
+          node --input-type=module -e 'import { ScrollRevealRise } from "@wcc/motion-library";
+          if (typeof ScrollRevealRise !== "function") throw new Error("ScrollRevealRise did not resolve");'

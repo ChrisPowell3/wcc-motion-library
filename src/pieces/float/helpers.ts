@@ -1,4 +1,4 @@
-import {durations} from '../../tokens';
+import {durations} from '../../tokens.js';
 
 export const bounded = (value: number | undefined, fallback: number, min: number, max: number) =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;

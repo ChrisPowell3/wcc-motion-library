@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {durations} from '../../tokens';
+import {durations} from '../../tokens.js';
 
 export const clampNumber = (value: number | undefined, fallback: number, min: number, max: number) =>
   typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;

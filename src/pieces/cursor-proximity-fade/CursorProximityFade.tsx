@@ -1,11 +1,11 @@
 'use client';
 
 import {useLayoutEffect,useRef,type CSSProperties,type ReactNode} from 'react';
-import {cleanDials,type MotionDials} from '../../dials';
-import {designMotion} from '../../tokens';
-import {subscribeFrame} from '../../internal/frame';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {clampNumber,useFinePointer} from '../hover-tilt/behavior';
+import {cleanDials,type MotionDials} from '../../dials.js';
+import {designMotion} from '../../tokens.js';
+import {subscribeFrame} from '../../internal/frame.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {clampNumber,useFinePointer} from '../hover-tilt/behavior.js';
 
 export interface CursorProximityFadeProps {
   children: ReactNode;

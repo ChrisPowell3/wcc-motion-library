@@ -1,12 +1,12 @@
 'use client';
 
 import {useLayoutEffect, useRef, type CSSProperties, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {subscribeFrame} from '../../internal/frame';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {useFinePointer} from '../hover-tilt/behavior';
-import {cursorTarget, resolveCursorFollowImage} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {subscribeFrame} from '../../internal/frame.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {useFinePointer} from '../hover-tilt/behavior.js';
+import {cursorTarget, resolveCursorFollowImage} from './settings.js';
 
 export interface CursorFollowImageProps {
   /** Supply an image with meaningful alt text (or alt="" for decorative media). */

@@ -1,11 +1,11 @@
 'use client';
 
 import {Children, Fragment, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {observeVisibility} from '../../internal/observe';
-import {subscribeFrame} from '../../internal/frame';
-import {resolveMarqueeSettings} from './dials';
+import type {MotionDials} from '../../dials.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {observeVisibility} from '../../internal/observe.js';
+import {subscribeFrame} from '../../internal/frame.js';
+import {resolveMarqueeSettings} from './dials.js';
 
 export interface MarqueeProps {
   children: ReactNode;

@@ -8,6 +8,13 @@ they take, so CP can say "use the swipe carousel here" on any site.
 - Rules for builders live in `AGENTS.md`.
 - Run `npm run check` to test and `npm run demo` to see pieces.
 
+## Git dependency installs (0.5.2)
+
+The repository ships `dist/` already built, so sites can use `npm ci --ignore-scripts`.
+There are no install lifecycle scripts. After changing `src/`, run `npm run build`
+and commit the generated `dist/` in the same PR. CI rebuilds from scratch and checks
+that every generated file matches the committed package.
+
 ## Motion dials (0.5.1)
 
 Every piece accepts the same `dials` shape. The Website Command Center can send

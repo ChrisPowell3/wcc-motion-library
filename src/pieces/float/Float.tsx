@@ -2,12 +2,12 @@
 
 import {Children, useLayoutEffect, useMemo, useRef, type CSSProperties, type ReactNode} from 'react';
 import {motion, useMotionValue} from 'motion/react';
-import {cleanDials, type MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {observeVisibility} from '../../internal/observe';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {bounded, deviceReduced, dialSize, speedRatio} from './helpers';
-import {createIdleTrack} from './idle';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {observeVisibility} from '../../internal/observe.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {bounded, deviceReduced, dialSize, speedRatio} from './helpers.js';
+import {createIdleTrack} from './idle.js';
 
 export interface FloatProps {
   children: ReactNode;

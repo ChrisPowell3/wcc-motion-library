@@ -35,6 +35,10 @@ quantity. A piece that feels cheap does not ship.
 
 12. Motion never plays once and locks. Every entrance animation moves when you scroll down, reverses when you scroll back up, and plays again when you scroll down again. The page never sits static. Default for every entrance piece is plays: scrub.
 
+13. Every change to `src/` must run `npm run build` and commit the rebuilt
+    `dist/` in the same PR. Git dependencies ship prebuilt; installs must never
+    rely on lifecycle scripts to generate the package.
+
 ## Every piece must ship with
 - `src/pieces/<id>/` (component, styles as CSS module or inline tokens)
 - One export line in `src/index.ts`

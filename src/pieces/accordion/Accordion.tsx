@@ -1,9 +1,9 @@
 'use client';
 
 import {useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode} from 'react';
-import {cleanDials, type MotionDials} from '../../dials';
-import {batchMotion, durations} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {batchMotion, durations} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
 
 export interface AccordionItem {
   /** Stable, unique item id. Duplicate ids are ignored after their first item. */

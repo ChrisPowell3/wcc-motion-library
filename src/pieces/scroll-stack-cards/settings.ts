@@ -1,8 +1,8 @@
-import {resolveEntrance} from '../../internal/entrance';
-import {cleanDials} from '../../dials';
-import {designMotion} from '../../tokens';
-import {clampNumber, dialSmoothing} from '../hover-tilt/behavior';
-import type {ScrollStackCardsProps} from './ScrollStackCards';
+import {resolveEntrance} from '../../internal/entrance.js';
+import {cleanDials} from '../../dials.js';
+import {designMotion} from '../../tokens.js';
+import {clampNumber, dialSmoothing} from '../hover-tilt/behavior.js';
+import type {ScrollStackCardsProps} from './ScrollStackCards.js';
 export function resolveScrollStackCards(props: Omit<ScrollStackCardsProps, 'children'>) {
   const dials = cleanDials('scroll-stack-cards', props.dials); const base = designMotion.stack;
   const size = dials.size === 'small' ? .5 : dials.size === 'large' ? 1.5 : 1;

@@ -2,12 +2,12 @@
 
 import {useLayoutEffect, useMemo, useRef, useState, type CSSProperties} from 'react';
 import {animate, useMotionValue} from 'motion/react';
-import {cleanDials, type MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
-import {observeVisibility} from '../../internal/observe';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {bounded, deviceReduced, dialDelay, speedRatio} from '../float/helpers';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance.js';
+import {observeVisibility} from '../../internal/observe.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {bounded, deviceReduced, dialDelay, speedRatio} from '../float/helpers.js';
 
 export interface CountUpProps extends EntranceOptions {
   children: string | readonly string[];

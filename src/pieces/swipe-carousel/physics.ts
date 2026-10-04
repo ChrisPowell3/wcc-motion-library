@@ -1,4 +1,4 @@
-import {flick} from '../../tokens';
+import {flick} from '../../tokens.js';
 
 export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 export const safeNumber = (value: number, fallback: number, min: number, max: number) =>

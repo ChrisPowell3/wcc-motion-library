@@ -1,12 +1,12 @@
 'use client';
 
 import {Children, useLayoutEffect, useRef, type CSSProperties, type ReactNode} from 'react';
-import type {EntranceOptions} from '../../internal/entrance';
-import type {MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {observeViewport} from '../../internal/viewport';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {resolveScrollStackCards, stackProgress} from './settings';
+import type {EntranceOptions} from '../../internal/entrance.js';
+import type {MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {observeViewport} from '../../internal/viewport.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {resolveScrollStackCards, stackProgress} from './settings.js';
 
 export interface ScrollStackCardsProps extends Pick<EntranceOptions, 'plays' | 'once'> {
   /** Each direct child is one card. Supply the card's own appearance and content. */

@@ -1,11 +1,11 @@
 'use client';
 
 import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {ease} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {useFinePointer} from '../hover-tilt/behavior';
-import {resolveImageHoverZoom} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {ease} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {useFinePointer} from '../hover-tilt/behavior.js';
+import {resolveImageHoverZoom} from './settings.js';
 
 export interface ImageHoverZoomProps {
   /** Supply images with their own alt text (including alt="" for decorative images). */

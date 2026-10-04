@@ -1,11 +1,11 @@
 'use client';
 import {useEffect, useId, useRef, useState, type ReactNode, type CSSProperties, type KeyboardEvent} from 'react';
 import {motion, useMotionValue, useMotionValueEvent, type MotionValue} from 'motion/react';
-import {subscribeFrame} from '../../internal/frame';
-import {observeViewport} from '../../internal/viewport';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {ease} from '../../tokens';
-import {resolvePinnedScrollStory, storyProgress, type PinnedScrollStorySettings} from './settings';
+import {subscribeFrame} from '../../internal/frame.js';
+import {observeViewport} from '../../internal/viewport.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {ease} from '../../tokens.js';
+import {resolvePinnedScrollStory, storyProgress, type PinnedScrollStorySettings} from './settings.js';
 export interface PinnedScrollStoryItem {id: string; label: string; content: ReactNode; thumbnail?: ReactNode;}
 export interface PinnedScrollStoryProps extends PinnedScrollStorySettings {items: readonly PinnedScrollStoryItem[]; overviewLabel?: string; ariaLabel?: string; className?: string; style?: CSSProperties;}
 

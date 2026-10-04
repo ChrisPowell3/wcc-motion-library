@@ -2,12 +2,12 @@
 
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent, type PointerEvent} from 'react';
 import {animate, motion, useInView, useMotionValue, useTransform, type MotionValue} from 'motion/react';
-import {autoplayTiming, durations, ease} from '../../tokens';
-import type {MotionDials} from '../../dials';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {resolveCarouselSettings} from './dials';
-import {cardOffset, clamp, landingIndex, resist, safeNumber, wrap} from './physics';
-import {focusRing, styles} from './styles';
+import {autoplayTiming, durations, ease} from '../../tokens.js';
+import type {MotionDials} from '../../dials.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {resolveCarouselSettings} from './dials.js';
+import {cardOffset, clamp, landingIndex, resist, safeNumber, wrap} from './physics.js';
+import {focusRing, styles} from './styles.js';
 
 export interface SwipeCarouselItem {
   /** Stable, unique card identifier. */

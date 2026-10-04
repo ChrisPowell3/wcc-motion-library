@@ -1,12 +1,12 @@
 'use client';
 
 import {useLayoutEffect, useRef, type CSSProperties, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {subscribeFrame} from '../../internal/frame';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {useFinePointer} from './behavior';
-import {resolveHoverTilt, tiltTarget} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {subscribeFrame} from '../../internal/frame.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {useFinePointer} from './behavior.js';
+import {resolveHoverTilt, tiltTarget} from './settings.js';
 
 export interface HoverTiltProps {
   children: ReactNode;

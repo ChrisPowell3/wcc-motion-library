@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {designMotion} from '../../tokens';
-import {clampNumber, dialSmoothing} from '../hover-tilt/behavior';
-import type {CursorFollowImageProps} from './CursorFollowImage';
+import {cleanDials} from '../../dials.js';
+import {designMotion} from '../../tokens.js';
+import {clampNumber, dialSmoothing} from '../hover-tilt/behavior.js';
+import type {CursorFollowImageProps} from './CursorFollowImage.js';
 export function resolveCursorFollowImage(props: Omit<CursorFollowImageProps, 'children'>) {
   const dials = cleanDials('cursor-follow-image', props.dials); const base = designMotion.cursorFollow;
   const size = dials.size === 'small' ? .5 : dials.size === 'large' ? 1.5 : 1;

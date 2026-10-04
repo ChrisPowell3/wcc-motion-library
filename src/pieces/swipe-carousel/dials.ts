@@ -1,6 +1,6 @@
-import {cleanDials, type MotionDials} from '../../dials';
-import {durations, ease, flick, springs} from '../../tokens';
-import {safeNumber} from './physics';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {durations, ease, flick, springs} from '../../tokens.js';
+import {safeNumber} from './physics.js';
 
 /** Resolved once per render; explicit established props override preset values. */
 export function resolveCarouselSettings({dials, gap, sideScale, dimColor}: {
