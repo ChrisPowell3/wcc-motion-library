@@ -1,6 +1,6 @@
 {
   "name": "@wcc/motion-library",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "WCC Motion Library: shared, hand-tuned, tested motion pieces for every CP website.",
   "private": true,
   "type": "module",
@@ -22,8 +22,7 @@
     "build": "tsc -p tsconfig.build.json",
     "check": "tsc --noEmit && vitest run",
     "test": "vitest run",
-    "demo": "vite demo",
-    "prepare": "npm run build"
+    "demo": "vite demo"
   },
   "peerDependencies": {
     "react": ">=19",
