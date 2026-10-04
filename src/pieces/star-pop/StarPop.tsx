@@ -2,12 +2,12 @@
 
 import {Children, useLayoutEffect, useMemo, useRef, type CSSProperties, type ReactNode} from 'react';
 import {animate, motion, useMotionValue} from 'motion/react';
-import {cleanDials, type MotionDials} from '../../dials';
-import {batchMotion, ease, settleEase} from '../../tokens';
-import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
-import {observeVisibility} from '../../internal/observe';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {bounded, deviceReduced, dialDelay, speedRatio} from '../float/helpers';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {batchMotion, ease, settleEase} from '../../tokens.js';
+import {resolveEntrance, observeEntranceScrub, type EntranceOptions} from '../../internal/entrance.js';
+import {observeVisibility} from '../../internal/observe.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {bounded, deviceReduced, dialDelay, speedRatio} from '../float/helpers.js';
 
 export interface StarPopProps extends EntranceOptions {
   children: ReactNode;

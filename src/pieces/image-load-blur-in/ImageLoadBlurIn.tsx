@@ -2,10 +2,10 @@
 
 import {useLayoutEffect,useRef,type CSSProperties} from 'react';
 import {animate,motion,useMotionValue,useTransform} from 'motion/react';
-import {cleanDials,type MotionDials} from '../../dials';
-import {blurStrength,designMotion,durations,ease} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {clampNumber,speedFactor} from '../hover-tilt/behavior';
+import {cleanDials,type MotionDials} from '../../dials.js';
+import {blurStrength,designMotion,durations,ease} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {clampNumber,speedFactor} from '../hover-tilt/behavior.js';
 
 export interface ImageLoadBlurInProps {
   src: string;

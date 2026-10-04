@@ -1,6 +1,6 @@
 import {cubicBezier} from 'motion';
-import {subscribeFrame} from '../../internal/frame';
-import {batchMotion} from '../../tokens';
+import {subscribeFrame} from '../../internal/frame.js';
+import {batchMotion} from '../../tokens.js';
 
 const curve = cubicBezier(...batchMotion.idleEase);
 

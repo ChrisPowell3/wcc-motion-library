@@ -1,4 +1,4 @@
-import {subscribeFrame} from './frame';
+import {subscribeFrame} from './frame.js';
 type ViewportMetrics = {scrollY: number; scrollHeight: number; width: number};
 type Subscription = {element: Element; update: (rect: DOMRectReadOnly, viewportHeight: number, deltaMs: number, metrics: ViewportMetrics) => boolean};
 const subscribers = new Set<Subscription>();

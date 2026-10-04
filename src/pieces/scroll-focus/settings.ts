@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {batchMotion, blurStrength} from '../../tokens';
-import {clampNumber, dialSmoothing} from '../hover-tilt/behavior';
-import type {ScrollFocusProps} from './ScrollFocus';
+import {cleanDials} from '../../dials.js';
+import {batchMotion, blurStrength} from '../../tokens.js';
+import {clampNumber, dialSmoothing} from '../hover-tilt/behavior.js';
+import type {ScrollFocusProps} from './ScrollFocus.js';
 export function resolveScrollFocus(props: Omit<ScrollFocusProps, 'children'>) {
   const dials = cleanDials('scroll-focus', props.dials);
   const base = batchMotion.focus;

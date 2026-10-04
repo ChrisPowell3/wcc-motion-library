@@ -1,7 +1,7 @@
-import {resolveEntrance} from '../../internal/entrance';
-import {cleanDials} from '../../dials';
-import {durations, ease, settleEase, springyEase, blurStrength} from '../../tokens';
-import type {ScrollRevealRiseProps} from './ScrollRevealRise';
+import {resolveEntrance} from '../../internal/entrance.js';
+import {cleanDials} from '../../dials.js';
+import {durations, ease, settleEase, springyEase, blurStrength} from '../../tokens.js';
+import type {ScrollRevealRiseProps} from './ScrollRevealRise.js';
 
 const clamp = (value: number | undefined, fallback: number, min: number, max: number) =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;

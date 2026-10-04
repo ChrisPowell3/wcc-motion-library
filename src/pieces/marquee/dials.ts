@@ -1,6 +1,6 @@
-import {cleanDials} from '../../dials';
-import {batchMotion, durations} from '../../tokens';
-import type {MarqueeProps} from './Marquee';
+import {cleanDials} from '../../dials.js';
+import {batchMotion, durations} from '../../tokens.js';
+import type {MarqueeProps} from './Marquee.js';
 
 const bounded = (value: number | undefined, fallback: number, min: number, max: number) =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;

@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {clampNumber, speedFactor} from '../hover-tilt/behavior';
-import type {ImageHoverZoomProps} from './ImageHoverZoom';
+import {cleanDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {clampNumber, speedFactor} from '../hover-tilt/behavior.js';
+import type {ImageHoverZoomProps} from './ImageHoverZoom.js';
 export function resolveImageHoverZoom(props: Omit<ImageHoverZoomProps, 'children'>) {
   const dials = cleanDials('image-hover-zoom', props.dials);
   return {

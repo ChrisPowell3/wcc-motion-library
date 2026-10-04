@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {clampNumber, dialSmoothing} from './behavior';
-import type {HoverTiltProps} from './HoverTilt';
+import {cleanDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {clampNumber, dialSmoothing} from './behavior.js';
+import type {HoverTiltProps} from './HoverTilt.js';
 export function resolveHoverTilt(props: Omit<HoverTiltProps, 'children'>) {
   const dials = cleanDials('hover-tilt', props.dials); const base = batchMotion.hover;
   return {

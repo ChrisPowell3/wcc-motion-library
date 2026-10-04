@@ -2,12 +2,12 @@
 
 import {Children, useLayoutEffect, useRef, useState, type ReactNode} from 'react';
 import {animate, motion, useMotionValue, useTransform} from 'motion/react';
-import {durations, ease} from '../../tokens';
-import type {MotionDials} from '../../dials';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {resolveRevealDials} from './dials';
-import {observeEntranceScrub, type EntranceOptions} from '../../internal/entrance';
-import {styles} from './styles';
+import {durations, ease} from '../../tokens.js';
+import type {MotionDials} from '../../dials.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {resolveRevealDials} from './dials.js';
+import {observeEntranceScrub, type EntranceOptions} from '../../internal/entrance.js';
+import {styles} from './styles.js';
 
 export interface ScrollRevealRiseProps extends EntranceOptions {
   /** Shared word dials; see catalog for values. Explicit props override matching dials.

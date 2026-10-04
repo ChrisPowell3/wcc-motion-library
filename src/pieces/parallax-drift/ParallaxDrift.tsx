@@ -1,11 +1,11 @@
 'use client';
 
 import {useLayoutEffect, useRef, type CSSProperties, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {observeViewport} from '../../internal/viewport';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {resolveParallaxDrift} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {observeViewport} from '../../internal/viewport.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {resolveParallaxDrift} from './settings.js';
 
 export interface ParallaxDriftProps {
   children: ReactNode;

@@ -2,10 +2,10 @@
 
 import {useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode} from 'react';
 import {motion, useAnimationControls} from 'motion/react';
-import {cleanDials, type MotionDials} from '../../dials';
-import {designMotion, durations, ease} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {lockPageScroll} from './scroll-lock';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {designMotion, durations, ease} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {lockPageScroll} from './scroll-lock.js';
 
 export interface FullscreenViewerItem {
   /** Stable id. Duplicate ids are ignored after their first occurrence. */

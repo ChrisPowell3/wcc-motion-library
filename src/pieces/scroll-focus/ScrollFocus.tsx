@@ -1,11 +1,11 @@
 'use client';
 
 import {useLayoutEffect, useRef, type CSSProperties} from 'react';
-import type {MotionDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {observeViewport} from '../../internal/viewport';
-import {focusTargets, resolveScrollFocus} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {observeViewport} from '../../internal/viewport.js';
+import {focusTargets, resolveScrollFocus} from './settings.js';
 
 export interface ScrollFocusProps {
   /** Plain text only. Images and interactive descendants are deliberately excluded. */

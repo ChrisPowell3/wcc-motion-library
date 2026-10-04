@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {designMotion} from '../../tokens';
-import {clampNumber, dialSmoothing} from '../hover-tilt/behavior';
-import type {ParallaxDriftProps} from './ParallaxDrift';
+import {cleanDials} from '../../dials.js';
+import {designMotion} from '../../tokens.js';
+import {clampNumber, dialSmoothing} from '../hover-tilt/behavior.js';
+import type {ParallaxDriftProps} from './ParallaxDrift.js';
 export function resolveParallaxDrift(props: Omit<ParallaxDriftProps, 'children'>) {
   const dials = cleanDials('parallax-drift', props.dials); const base = designMotion.parallax;
   return {

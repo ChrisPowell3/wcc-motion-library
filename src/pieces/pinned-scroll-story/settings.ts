@@ -1,5 +1,5 @@
-import {cleanDials, type MotionDials} from '../../dials';
-import {blurStrength, designMotion, durations} from '../../tokens';
+import {cleanDials, type MotionDials} from '../../dials.js';
+import {blurStrength, designMotion, durations} from '../../tokens.js';
 export interface PinnedScrollStorySettings {dials?: MotionDials; duration?: number; distance?: number; blur?: number; startOpacity?: number; trackPerSlide?: number; top?: number; align?: 'start' | 'center';}
 const bounded = (value: number | undefined, fallback: number, min: number, max: number) => typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 export function resolvePinnedScrollStory(props: PinnedScrollStorySettings) {

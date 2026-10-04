@@ -1,7 +1,7 @@
-import {cleanDials} from '../../dials';
-import {batchMotion} from '../../tokens';
-import {clampNumber, speedFactor} from '../hover-tilt/behavior';
-import type {HoverLiftProps} from './HoverLift';
+import {cleanDials} from '../../dials.js';
+import {batchMotion} from '../../tokens.js';
+import {clampNumber, speedFactor} from '../hover-tilt/behavior.js';
+import type {HoverLiftProps} from './HoverLift.js';
 export function resolveHoverLift(props: Omit<HoverLiftProps, 'children'>) {
   const dials = cleanDials('hover-lift', props.dials);
   return {

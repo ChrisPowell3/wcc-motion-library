@@ -1,11 +1,11 @@
 'use client';
 
 import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
-import type {MotionDials} from '../../dials';
-import {ease} from '../../tokens';
-import {useReducedMotionPreference} from '../../useReducedMotionPreference';
-import {useFinePointer} from '../hover-tilt/behavior';
-import {resolveHoverLift} from './settings';
+import type {MotionDials} from '../../dials.js';
+import {ease} from '../../tokens.js';
+import {useReducedMotionPreference} from '../../useReducedMotionPreference.js';
+import {useFinePointer} from '../hover-tilt/behavior.js';
+import {resolveHoverLift} from './settings.js';
 
 export interface HoverLiftProps {
   /** Supply a native button/link for interactive content; no extra tab stop is added. */

@@ -1,4 +1,4 @@
-import {batchMotion} from '../tokens';
+import {batchMotion} from '../tokens.js';
 type Callback = (time: number, deltaMs: number) => boolean;
 const callbacks = new Set<Callback>();
 let pending: number | undefined;
