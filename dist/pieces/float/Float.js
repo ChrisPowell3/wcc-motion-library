@@ -1,0 +1,64 @@
+'use client';
+import { jsx as _jsx, Fragment as _Fragment } from "react/jsx-runtime";
+import { Children, useLayoutEffect, useMemo, useRef } from 'react';
+import { motion, useMotionValue } from 'motion/react';
+import { cleanDials } from '../../dials';
+import { batchMotion } from '../../tokens';
+import { observeVisibility } from '../../internal/observe';
+import { useReducedMotionPreference } from '../../useReducedMotionPreference';
+import { bounded, deviceReduced, dialSize, speedRatio } from './helpers';
+import { createIdleTrack } from './idle';
+export function resolveFloatSettings(props) {
+    const dials = cleanDials('float', props.dials), base = batchMotion.float, ratio = speedRatio(dials.speed);
+    return {
+        duration: bounded(props.duration, base.duration * ratio, .2, 20),
+        durationStep: bounded(props.durationStep, base.durationStep * ratio, 0, 3),
+        phase: bounded(props.phase, base.phase * ratio, 0, 5),
+        distance: bounded(props.distance, base.distance * dialSize(dials.size), 0, 40),
+        rotate: bounded(props.rotate, 0, 0, 5),
+    };
+}
+function FloatingItem({ children, index, settings, reduced, className, style }) {
+    const node = useRef(null), focused = useRef(false), finishNow = useRef(() => { });
+    const y = useMotionValue(0), rotate = useMotionValue(0);
+    useLayoutEffect(() => {
+        const element = node.current;
+        if (!element)
+            return;
+        const doc = element.ownerDocument;
+        let visible = false, active = true;
+        let runs = [];
+        const stop = () => { runs.forEach(run => run.stop()); runs = []; y.stop(); rotate.stop(); };
+        const finish = () => { stop(); y.set(0); rotate.set(0); };
+        finishNow.current = finish;
+        if (reduced || deviceReduced() || focused.current) {
+            finish();
+            return stop;
+        }
+        const update = () => {
+            if (!active || focused.current)
+                return;
+            if (visible && !doc.hidden && !runs.length) {
+                const angle = (index % 2 ? 1 : -1) * settings.rotate;
+                runs.push(createIdleTrack(settings.duration + (index % 3) * settings.durationStep, -index * settings.phase, progress => {
+                    y.set(-settings.distance * progress);
+                    if (settings.rotate)
+                        rotate.set(angle * (1 - 2 * progress));
+                }));
+            }
+            runs.forEach(run => visible && !doc.hidden ? run.play() : run.pause());
+        };
+        const release = observeVisibility(element, next => { visible = next; update(); }, { threshold: 0, rootMargin: '0px' });
+        doc.addEventListener('visibilitychange', update);
+        return () => { active = false; release(); doc.removeEventListener('visibilitychange', update); stop(); finishNow.current = () => { }; };
+    }, [index, settings, reduced, y, rotate]);
+    return _jsx(motion.div, { ref: node, initial: false, className: className, onFocusCapture: () => { focused.current = true; finishNow.current(); }, style: { display: 'inline-block', ...style, y: reduced ? 0 : y, rotate: reduced ? 0 : rotate }, children: children });
+}
+/** A gentle idle loop that suspends all work outside the viewport or hidden tab. */
+export function Float({ children, className, style, ...props }) {
+    const reduced = useReducedMotionPreference();
+    // Inline dial objects are common in JSX; only semantic values may restart motion.
+    const dials = cleanDials('float', props.dials);
+    const settings = useMemo(() => resolveFloatSettings({ ...props, dials }), [dials.speed, dials.size, props.distance, props.duration, props.durationStep, props.phase, props.rotate]);
+    return _jsx(_Fragment, { children: Children.toArray(children).map((child, index) => _jsx(FloatingItem, { index: index, settings: settings, reduced: reduced, className: className, style: style, children: child }, typeof child === 'object' && 'key' in child ? child.key : index)) });
+}
