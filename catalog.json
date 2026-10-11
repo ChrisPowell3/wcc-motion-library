@@ -1,6 +1,6 @@
 {
   "library": "@wcc/motion-library",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "pieces": [
     {
       "id": "swipe-carousel",
@@ -340,7 +340,7 @@
       "name": "Scroll Focus",
       "export": "ScrollFocus",
       "summary": "Text sharpens as it enters the screen and gently softens as it leaves.",
-      "status": "beta",
+      "status": "ready",
       "dials": [
         "speed",
         "size",
@@ -762,7 +762,7 @@
       "name": "Marquee",
       "export": "Marquee",
       "summary": "Content glides in a continuous strip that pauses when you interact with it.",
-      "status": "beta",
+      "status": "ready",
       "dials": [
         "speed",
         "direction",
@@ -860,7 +860,7 @@
       "name": "Float",
       "export": "Float",
       "summary": "Small items drift gently up and down at slightly different rhythms.",
-      "status": "beta",
+      "status": "ready",
       "dials": [
         "speed",
         "size"
@@ -962,7 +962,7 @@
       "name": "Hover Tilt",
       "export": "HoverTilt",
       "summary": "A card gently lifts and follows the pointer on devices with a precise cursor.",
-      "status": "beta",
+      "status": "ready",
       "dials": [
         "size",
         "speed"
@@ -1644,7 +1644,7 @@
       "export": "ParallaxDrift",
       "name": "Parallax Drift",
       "summary": "An image drifts gently with page scrolling to add a little depth.",
-      "status": "beta",
+      "status": "ready",
       "dials": [
         "speed",
         "size",
